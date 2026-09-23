@@ -8,7 +8,7 @@ ad-*.json
 ad-*.csv
 appart-*.csv
 tz.txt
-mail.json
+notify.json
 __pycache__/
 *.py[cod]
 .venv/

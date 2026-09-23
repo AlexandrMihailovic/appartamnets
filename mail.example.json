@@ -1,9 +1,0 @@
-{
-  "host": "smtp.gmail.com",
-  "port": 465,
-  "user": "отправитель@gmail.com",
-  "password": "пароль приложения из аккаунта Google",
-  "from": "отправитель@gmail.com",
-  "to": "куда-приходят-письма@example.com",
-  "subject": "Сообщение с сайта"
-}

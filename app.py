@@ -7,15 +7,13 @@ import hmac
 import json
 import os
 import re
-import smtplib
-import ssl
 import time
 import sqlite3
 import threading
+import urllib.request
 import webbrowser
-from email.message import EmailMessage
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-from urllib.parse import parse_qs, urlparse
+from urllib.parse import parse_qs, quote, urlparse
 
 import db
 from profiles import PROFILES
@@ -580,22 +578,13 @@ def strip_private(payload):
     return payload
 
 
-MAIL_CONFIG = os.path.join(HERE, "mail.json")
-
+NOTIFY_CONFIG = os.path.join(HERE, "notify.json")
 CONTACT_LIMIT_IP = 5
 CONTACT_LIMIT_ALL = 40
 TOKEN_MIN_AGE = 3
 TOKEN_MAX_AGE = 7200
 MAX_BODY = 64 * 1024
 EMAIL_RE = re.compile(r"^[^@\s]{1,64}@[a-z0-9.-]{1,180}\.[a-z]{2,24}$", re.I)
-
-
-def mail_config():
-    try:
-        with open(MAIL_CONFIG, encoding="utf-8") as fh:
-            return json.load(fh)
-    except (OSError, json.JSONDecodeError):
-        return None
 
 
 def form_secret(conn) -> bytes:
@@ -631,39 +620,41 @@ def check_token(conn, token: str):
     return None
 
 
-def send_mail(cfg: dict, row: dict) -> None:
-    message = EmailMessage()
-    message["Subject"] = cfg.get("subject", "Сообщение с сайта")
-    message["From"] = cfg["from"]
-    message["To"] = cfg["to"]
-    if EMAIL_RE.match(row["email"] or ""):
-        message["Reply-To"] = row["email"]
-    message.set_content(
-        f"Имя: {row['name']}\n"
-        f"Почта: {row['email']}\n"
-        f"Адрес: {row['ip']}\n"
-        f"Время: {row['ts']}\n\n"
-        f"{row['body']}\n")
-    port = int(cfg.get("port", 465))
-    context = ssl.create_default_context()
-    if port == 587:
-        with smtplib.SMTP(cfg["host"], port, timeout=30) as server:
-            server.starttls(context=context)
-            server.login(cfg["user"], cfg["password"])
-            server.send_message(message)
-    else:
-        with smtplib.SMTP_SSL(cfg["host"], port, timeout=30, context=context) as server:
-            server.login(cfg["user"], cfg["password"])
-            server.send_message(message)
+def notify_config():
+    try:
+        with open(NOTIFY_CONFIG, encoding="utf-8") as fh:
+            return json.load(fh)
+    except (OSError, json.JSONDecodeError):
+        return None
+
+
+def send_telegram(cfg: dict, row: dict) -> None:
+    text = (f"Сообщение с сайта\n\n"
+            f"Имя: {row['name']}\n"
+            f"Почта: {row['email']}\n"
+            f"Адрес: {row['ip']}\n"
+            f"Время: {row['ts']}\n\n"
+            f"{row['body']}")
+    payload = json.dumps({
+        "chat_id": cfg["chat_id"],
+        "text": text[:4000],
+        "disable_web_page_preview": True,
+    }).encode()
+    url = "https://api.telegram.org/bot%s/sendMessage" % quote(str(cfg["token"]), safe=":")
+    request = urllib.request.Request(url, data=payload, headers={"content-type": "application/json"})
+    with urllib.request.urlopen(request, timeout=20) as response:
+        answer = json.loads(response.read())
+    if not answer.get("ok"):
+        raise RuntimeError(answer.get("description") or "телеграм отказал")
 
 
 def deliver(row: dict) -> None:
-    cfg = mail_config()
+    cfg = notify_config()
     if not cfg:
         return
     conn = db.connect()
     try:
-        send_mail(cfg, row)
+        send_telegram(cfg, row)
         conn.execute("UPDATE messages SET sent = 1, error = NULL WHERE id = ?", (row["id"],))
     except Exception as exc:
         conn.execute("UPDATE messages SET sent = 0, error = ? WHERE id = ?",
