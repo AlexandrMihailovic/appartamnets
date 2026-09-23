@@ -2,12 +2,18 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
+import hmac
 import json
 import os
 import re
+import smtplib
+import ssl
+import time
 import sqlite3
 import threading
 import webbrowser
+from email.message import EmailMessage
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, urlparse
 
@@ -17,7 +23,13 @@ from profiles import PROFILES
 HERE = os.path.dirname(os.path.abspath(__file__))
 INDEX = os.path.join(HERE, "static", "index.html")
 FAVICON = os.path.join(HERE, "static", "favicon.ico")
-ROBOTS = b"User-agent: *\nAllow: /\n"
+OG_IMAGE = os.path.join(HERE, "static", "og.png")
+ROBOTS = "User-agent: *\nAllow: /\n\n"
+SITEMAP = """<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>{origin}/</loc><lastmod>{today}</lastmod><changefreq>hourly</changefreq><priority>1.0</priority></url>
+</urlset>
+"""
 
 PPM = "COALESCE(d.price_per_m2, CASE WHEN d.area > 0 THEN a.price / d.area END)"
 DROP_ABS = "CASE WHEN a.prev_price IS NOT NULL THEN a.price - a.prev_price END"
@@ -568,6 +580,135 @@ def strip_private(payload):
     return payload
 
 
+MAIL_CONFIG = os.path.join(HERE, "mail.json")
+
+CONTACT_LIMIT_IP = 5
+CONTACT_LIMIT_ALL = 40
+TOKEN_MIN_AGE = 3
+TOKEN_MAX_AGE = 7200
+MAX_BODY = 64 * 1024
+EMAIL_RE = re.compile(r"^[^@\s]{1,64}@[a-z0-9.-]{1,180}\.[a-z]{2,24}$", re.I)
+
+
+def mail_config():
+    try:
+        with open(MAIL_CONFIG, encoding="utf-8") as fh:
+            return json.load(fh)
+    except (OSError, json.JSONDecodeError):
+        return None
+
+
+def form_secret(conn) -> bytes:
+    value = db.get_meta(conn, "form_secret")
+    if not value:
+        value = os.urandom(32).hex()
+        db.set_meta(conn, "form_secret", value)
+        conn.commit()
+    return value.encode()
+
+
+def sign_stamp(conn, stamp: str) -> str:
+    return hmac.new(form_secret(conn), stamp.encode(), hashlib.sha256).hexdigest()[:32]
+
+
+def make_token(conn) -> str:
+    stamp = str(int(time.time()))
+    return f"{stamp}.{sign_stamp(conn, stamp)}"
+
+
+def check_token(conn, token: str):
+    stamp, _, sign = (token or "").partition(".")
+    stale = "форма устарела, обновите страницу"
+    if not stamp.isdigit() or len(sign) != 32:
+        return stale
+    if not hmac.compare_digest(sign, sign_stamp(conn, stamp)):
+        return stale
+    age = time.time() - int(stamp)
+    if age < TOKEN_MIN_AGE:
+        return "слишком быстро — похоже на робота"
+    if age > TOKEN_MAX_AGE:
+        return stale
+    return None
+
+
+def send_mail(cfg: dict, row: dict) -> None:
+    message = EmailMessage()
+    message["Subject"] = cfg.get("subject", "Сообщение с сайта")
+    message["From"] = cfg["from"]
+    message["To"] = cfg["to"]
+    if EMAIL_RE.match(row["email"] or ""):
+        message["Reply-To"] = row["email"]
+    message.set_content(
+        f"Имя: {row['name']}\n"
+        f"Почта: {row['email']}\n"
+        f"Адрес: {row['ip']}\n"
+        f"Время: {row['ts']}\n\n"
+        f"{row['body']}\n")
+    port = int(cfg.get("port", 465))
+    context = ssl.create_default_context()
+    if port == 587:
+        with smtplib.SMTP(cfg["host"], port, timeout=30) as server:
+            server.starttls(context=context)
+            server.login(cfg["user"], cfg["password"])
+            server.send_message(message)
+    else:
+        with smtplib.SMTP_SSL(cfg["host"], port, timeout=30, context=context) as server:
+            server.login(cfg["user"], cfg["password"])
+            server.send_message(message)
+
+
+def deliver(row: dict) -> None:
+    cfg = mail_config()
+    if not cfg:
+        return
+    conn = db.connect()
+    try:
+        send_mail(cfg, row)
+        conn.execute("UPDATE messages SET sent = 1, error = NULL WHERE id = ?", (row["id"],))
+    except Exception as exc:
+        conn.execute("UPDATE messages SET sent = 0, error = ? WHERE id = ?",
+                     (f"{type(exc).__name__}: {exc}"[:500], row["id"]))
+    finally:
+        conn.commit()
+        conn.close()
+
+
+def api_contact(conn, payload: dict, ip: str) -> dict:
+    if (payload.get("website") or "").strip():
+        return {"ok": True}
+
+    problem = check_token(conn, payload.get("token", ""))
+    if problem:
+        return {"error": problem}
+
+    name = (payload.get("name") or "").strip()[:100]
+    email = (payload.get("email") or "").strip()[:200]
+    body = (payload.get("body") or "").strip()[:5000]
+    if len(name) < 2:
+        return {"error": "напишите, как к вам обращаться"}
+    if not EMAIL_RE.match(email):
+        return {"error": "проверьте адрес почты"}
+    if len(body) < 10:
+        return {"error": "слишком короткое сообщение"}
+
+    recent_ip = conn.execute(
+        "SELECT COUNT(*) c FROM messages WHERE ip = ? AND ts > datetime('now', '-1 hour')",
+        (ip,)).fetchone()["c"]
+    recent_all = conn.execute(
+        "SELECT COUNT(*) c FROM messages WHERE ts > datetime('now', '-1 hour')").fetchone()["c"]
+    if recent_ip >= CONTACT_LIMIT_IP or recent_all >= CONTACT_LIMIT_ALL:
+        return {"error": "слишком много сообщений, попробуйте позже"}
+
+    stamp = db.now()
+    cursor = conn.execute(
+        "INSERT INTO messages (ts, ip, name, email, body) VALUES (?,?,?,?,?)",
+        (stamp, ip, name, email, body))
+    conn.commit()
+    row = {"id": cursor.lastrowid, "ts": stamp, "ip": ip, "name": name, "email": email, "body": body}
+    threading.Thread(target=deliver, args=(row,), daemon=True).start()
+    return {"ok": True}
+
+
 def api_flag(conn, payload: dict) -> dict:
     ad_id = str(payload.get("id") or "")
     if not ad_id:
@@ -598,6 +739,16 @@ class Handler(BaseHTTPRequestHandler):
     def log_message(self, *args):
         pass
 
+    def origin(self) -> str:
+        scheme = self.headers.get("x-forwarded-proto") or "http"
+        host = self.headers.get("host") or "127.0.0.1"
+        return f"{scheme}://{host}"
+
+    def send_page(self):
+        with open(INDEX, encoding="utf-8") as fh:
+            page = fh.read().replace("{{ORIGIN}}", self.origin())
+        self.send_bytes(page.encode(), "text/html; charset=utf-8")
+
     def send_bytes(self, body: bytes, ctype: str, status=200):
         self.send_response(status)
         self.send_header("content-type", ctype)
@@ -619,11 +770,19 @@ class Handler(BaseHTTPRequestHandler):
         params = parse_qs(parsed.query)
         try:
             if route in ("/", "/index.html"):
-                self.send_file(INDEX, "text/html; charset=utf-8")
+                self.send_page()
             elif route == "/favicon.ico":
                 self.send_file(FAVICON, "image/x-icon")
+            elif route == "/og.png":
+                self.send_file(OG_IMAGE, "image/png")
             elif route == "/robots.txt":
-                self.send_bytes(ROBOTS, "text/plain; charset=utf-8")
+                self.send_bytes(f"{ROBOTS}Sitemap: {self.origin()}/sitemap.xml\n".encode(),
+                                "text/plain; charset=utf-8")
+            elif route == "/sitemap.xml":
+                self.send_bytes(SITEMAP.format(origin=self.origin(),
+                                               today=db.now()[:10]).encode(), "application/xml")
+            elif route == "/api/contact/token":
+                self.send_json({"token": make_token(self.conn)})
             elif route == "/api/meta":
                 self.send_json(api_meta(self.conn))
             elif route == "/api/ads":
@@ -641,15 +800,27 @@ class Handler(BaseHTTPRequestHandler):
         except Exception as exc:
             self.send_json({"error": f"{type(exc).__name__}: {exc}"}, 500)
 
+    @property
+    def client_ip(self) -> str:
+        forwarded = self.headers.get("x-forwarded-for") or ""
+        return (forwarded.split(",")[0].strip()
+                or self.headers.get("x-real-ip")
+                or self.client_address[0])
+
     def do_POST(self):
         length = int(self.headers.get("content-length") or 0)
+        if length > MAX_BODY:
+            return self.send_json({"error": "слишком большой запрос"}, 413)
+        route = urlparse(self.path).path
         try:
             payload = json.loads(self.rfile.read(length) or b"{}")
         except json.JSONDecodeError:
             return self.send_json({"error": "битый JSON"}, 400)
         try:
-            if urlparse(self.path).path == "/api/flag":
+            if route == "/api/flag":
                 self.send_json(api_flag(self.conn, payload))
+            elif route == "/api/contact":
+                self.send_json(api_contact(self.conn, payload, self.client_ip))
             else:
                 self.send_json({"error": "нет такого адреса"}, 404)
         except Exception as exc:

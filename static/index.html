@@ -5,6 +5,28 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Недвижимость — анализ</title>
 <link rel="icon" href="/favicon.ico" sizes="any">
+<meta name="description" content="Анализ рынка недвижимости Кишинёва: цены на квартиры, гаражи и парковки, история изменения цен, статистика по секторам и помесячная динамика стоимости квадратного метра.">
+<meta name="keywords" content="недвижимость Кишинёв, квартиры Кишинёв, купить квартиру в Кишинёве, цены на недвижимость Молдова, аналитика рынка недвижимости, цена за квадратный метр, вторичка и новострой, гаражи и парковки Кишинёв, статистика цен на жильё">
+<meta name="robots" content="index, follow, max-image-preview:large">
+<link rel="canonical" href="{{ORIGIN}}/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Недвижимость">
+<meta property="og:locale" content="ru_RU">
+<meta property="og:title" content="Недвижимость Кишинёва — анализ рынка">
+<meta property="og:description" content="Цены на квартиры и гаражи, история изменений, статистика по секторам и динамика EUR/m² по месяцам.">
+<meta property="og:url" content="{{ORIGIN}}/">
+<meta property="og:image" content="{{ORIGIN}}/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Недвижимость Кишинёва — анализ рынка">
+<meta name="twitter:description" content="Цены на квартиры и гаражи, история изменений, статистика по секторам и динамика EUR/m² по месяцам.">
+<meta name="twitter:image" content="{{ORIGIN}}/og.png">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebSite","name":"Недвижимость — анализ рынка Кишинёва",
+ "url":"{{ORIGIN}}/","inLanguage":"ru",
+ "description":"Цены на квартиры, гаражи и парковки в Кишинёве, история изменения цен, статистика по секторам и помесячная динамика стоимости квадратного метра."}
+</script>
 <style>
   :root{
     --bg:#0f1115; --panel:#171a21; --panel2:#1e222b; --line:#2a2f3a;
@@ -138,11 +160,34 @@
   .slegend i{display:inline-block;width:11px;height:3px;border-radius:2px}
   .scroll-x{overflow-x:auto}
   table.data td.num{font-variant-numeric:tabular-nums}
+  .modal{position:fixed;inset:0;z-index:1300;display:none;align-items:center;justify-content:center;padding:16px;background:#000a}
+  .modal.open{display:flex}
+  .modal-box{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+             padding:20px;width:min(480px,100%);box-shadow:0 20px 60px #000b}
+  .modal-box h3{margin:0 0 4px;font-size:17px}
+  .modal-box .sub{color:var(--dim);font-size:12.5px;margin-bottom:14px}
+  .modal-box label{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.8px;
+                   color:var(--dim);margin:10px 0 4px}
+  .modal-box input,.modal-box textarea{width:100%;background:var(--panel2);border:1px solid var(--line);
+      border-radius:8px;padding:8px 10px;font:inherit;color:inherit;resize:vertical}
+  .modal-box input:focus,.modal-box textarea:focus{outline:none;border-color:var(--accent)}
+  .trap{position:absolute;left:-9999px;width:1px;height:1px;opacity:0}
+  .note{font-size:12.5px;margin-top:10px;min-height:18px}
+  .note.bad{color:var(--bad)} .note.good{color:var(--good)}
+  .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
   .empty{padding:50px;text-align:center;color:var(--dim)}
   .pager{display:flex;gap:8px;justify-content:center;padding:14px}
 </style>
 </head>
 <body>
+
+<h1 class="sr-only">Недвижимость Кишинёва: цены, статистика и динамика рынка</h1>
+<noscript>
+  <p style="padding:16px;max-width:760px">Сайт собирает объявления о продаже недвижимости в Кишинёве
+  и показывает цены на квартиры, гаражи и парковки: историю изменения цен по каждому лоту, статистику
+  по секторам города, распределение по количеству комнат и площади, а также помесячную динамику
+  стоимости квадратного метра. Для работы нужен включённый JavaScript.</p>
+</noscript>
 
 <header>
   <div class="brand">Недвижимость</div>
@@ -155,6 +200,7 @@
   <input id="search" placeholder="поиск: улица, текст, id…">
   <div class="grow"></div>
   <span class="muted" id="dbinfo"></span>
+  <button class="btn" id="contactBtn">Связаться</button>
 </header>
 
 <main>
@@ -257,6 +303,27 @@
     <div id="mapView"><div id="map"></div><div class="legend" id="legend" style="display:none"></div></div>
   </section>
 </main>
+
+<div class="modal" id="contact">
+  <div class="modal-box">
+    <h3>Связаться</h3>
+    <div class="sub">Вопрос, замечание или предложение — напишите, отвечу на указанную почту.</div>
+    <form id="contactForm" autocomplete="on">
+      <label for="c_name">Как к вам обращаться</label>
+      <input id="c_name" name="name" maxlength="100" required>
+      <label for="c_email">Почта для ответа</label>
+      <input id="c_email" name="email" type="email" maxlength="200" required>
+      <label for="c_body">Сообщение</label>
+      <textarea id="c_body" name="body" rows="5" maxlength="5000" required></textarea>
+      <input class="trap" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
+      <div class="note" id="contactNote"></div>
+      <div style="display:flex;gap:8px;margin-top:12px">
+        <button class="btn primary grow" type="submit" id="contactSend">Отправить</button>
+        <button class="btn" type="button" id="contactClose">Отмена</button>
+      </div>
+    </form>
+  </div>
+</div>
 
 <div class="backdrop" id="backdrop"></div>
 <div class="drawer" id="drawer"></div>
@@ -1050,6 +1117,58 @@ $('#sort').onchange = $('#dir').onchange = () => { state.sortTouched = true; sta
 $('#search').onkeydown = e => { if(e.key === 'Enter'){ state.offset = 0; refresh(); } };
 document.querySelectorAll('aside input').forEach(i =>
   i.addEventListener('keydown', e => { if(e.key === 'Enter'){ state.offset = 0; refresh(); } }));
+
+const contact = {token: null, busy: false};
+async function openContact(){
+  $('#contact').classList.add('open');
+  $('#contactNote').textContent = '';
+  $('#contactNote').className = 'note';
+  if(!contact.token){
+    try{ contact.token = (await (await fetch('/api/contact/token')).json()).token; }catch(e){}
+  }
+  setTimeout(() => $('#c_name').focus(), 50);
+}
+function closeContact(){ $('#contact').classList.remove('open'); }
+$('#contactBtn').onclick = openContact;
+$('#contactClose').onclick = closeContact;
+$('#contact').onclick = e => { if(e.target.id === 'contact') closeContact(); };
+
+$('#contactForm').onsubmit = async e => {
+  e.preventDefault();
+  if(contact.busy) return;
+  const note = $('#contactNote');
+  const data = {
+    token: contact.token,
+    name: $('#c_name').value.trim(),
+    email: $('#c_email').value.trim(),
+    body: $('#c_body').value.trim(),
+    website: $('#contactForm').website.value,
+  };
+  contact.busy = true;
+  $('#contactSend').textContent = 'Отправляю…';
+  try{
+    const r = await (await fetch('/api/contact', {
+      method: 'POST', headers: {'content-type': 'application/json'}, body: JSON.stringify(data)})).json();
+    if(r.ok){
+      note.className = 'note good';
+      note.textContent = 'Отправлено. Спасибо!';
+      $('#contactForm').reset();
+      contact.token = null;
+      setTimeout(closeContact, 1600);
+    }else{
+      note.className = 'note bad';
+      note.textContent = r.error || 'не получилось отправить';
+      if((r.error || '').includes('устарела')) contact.token = null;
+    }
+  }catch(err){
+    note.className = 'note bad';
+    note.textContent = 'сеть недоступна, попробуйте ещё раз';
+  }
+  contact.busy = false;
+  $('#contactSend').textContent = 'Отправить';
+};
+addEventListener('keydown', e => { if(e.key === 'Escape') closeContact(); });
+if(hash.get('contact') === '1') openContact();
 
 loadMeta();
 </script>

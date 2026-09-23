@@ -109,6 +109,18 @@ CREATE TABLE IF NOT EXISTS meta (
     key   TEXT PRIMARY KEY,
     value TEXT
 );
+
+CREATE TABLE IF NOT EXISTS messages (
+    id    INTEGER PRIMARY KEY AUTOINCREMENT,
+    ts    TEXT NOT NULL,
+    ip    TEXT,
+    name  TEXT,
+    email TEXT,
+    body  TEXT,
+    sent  INTEGER DEFAULT 0,
+    error TEXT
+);
+CREATE INDEX IF NOT EXISTS messages_ts ON messages(ts);
 """
 
 
