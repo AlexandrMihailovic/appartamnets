@@ -623,9 +623,11 @@ async function openAd(id){
   $('#drawer').classList.add('open');
   $('#drawer').innerHTML = '<div class="empty">загрузка…</div>';
   const a = await (await fetch('/api/ad/' + id)).json();
+  const featValue = v => v === 'True' ? '<span class="up">есть</span>'
+                       : v === 'False' ? '<span class="muted">нет</span>' : esc(v);
   const feats = Object.entries(a.features || {})
     .filter(([k,v]) => v && !['Фотографии','Контакты','Текст объявления','Карта'].includes(k))
-    .map(([k,v]) => `<tr><td>${esc(k)}</td><td>${esc(v)}</td></tr>`).join('');
+    .map(([k,v]) => `<tr><td>${esc(k)}</td><td>${featValue(v)}</td></tr>`).join('');
   $('#drawer').innerHTML = `
     <div style="display:flex;gap:10px;align-items:center;margin-bottom:12px">
       <button class="btn" onclick="closeAd()">← закрыть</button>
