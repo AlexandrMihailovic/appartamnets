@@ -1,0 +1,17 @@
+999.db
+999.db-wal
+999.db-shm
+*.log
+*.pid
+nohup.out
+ad-*.json
+ad-*.csv
+appart-*.csv
+tz.txt
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.idea/
+.vscode/
+.DS_Store

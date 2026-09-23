@@ -1,0 +1,1056 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>999.md — недвижимость</title>
+<style>
+  :root{
+    --bg:#0f1115; --panel:#171a21; --panel2:#1e222b; --line:#2a2f3a;
+    --text:#e6e8ee; --dim:#98a0b3; --accent:#4c9aff; --good:#3ddc97; --bad:#ff6b6b;
+    --warn:#ffc55c; --radius:10px;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);
+       font:14px/1.45 -apple-system,Segoe UI,Roboto,Ubuntu,sans-serif}
+  a{color:var(--accent);text-decoration:none}
+  a:hover{text-decoration:underline}
+  button,input,select{font:inherit;color:inherit}
+  header{position:sticky;top:0;z-index:30;background:var(--panel);border-bottom:1px solid var(--line);
+         padding:10px 16px;display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+  .brand{font-weight:700;letter-spacing:.4px;margin-right:4px}
+  .seg{display:flex;background:var(--panel2);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+  .seg button{background:none;border:0;padding:7px 14px;cursor:pointer;color:var(--dim);white-space:nowrap}
+  .seg button.on{background:var(--accent);color:#08111f;font-weight:600}
+  .seg button .badge{margin-left:6px;font-size:11px;opacity:.85}
+  .grow{flex:1}
+  #search{background:var(--panel2);border:1px solid var(--line);border-radius:var(--radius);
+          padding:7px 11px;width:230px}
+  main{display:flex;align-items:flex-start;gap:14px;padding:14px 16px}
+  aside{width:255px;flex:none;position:sticky;top:62px;background:var(--panel);border:1px solid var(--line);
+        border-radius:var(--radius);padding:12px;max-height:calc(100vh - 78px);overflow:auto}
+  aside h3{margin:14px 0 7px;font-size:11px;text-transform:uppercase;letter-spacing:.9px;color:var(--dim)}
+  aside h3:first-child{margin-top:0}
+  .pair{display:flex;gap:6px}
+  .pair input{width:100%}
+  aside input[type=number],aside input[type=text],aside select{
+    background:var(--panel2);border:1px solid var(--line);border-radius:7px;padding:6px 8px;width:100%}
+  .chips{display:flex;flex-wrap:wrap;gap:5px}
+  .chip{background:var(--panel2);border:1px solid var(--line);border-radius:20px;padding:3px 11px;
+        cursor:pointer;font-size:12px;color:var(--dim);user-select:none}
+  .chip.on{background:var(--accent);border-color:var(--accent);color:#08111f;font-weight:600}
+  .check{display:flex;align-items:center;gap:7px;margin:5px 0;cursor:pointer;color:var(--dim)}
+  .check input{accent-color:var(--accent)}
+  .multi{max-height:168px;overflow:auto;border:1px solid var(--line);border-radius:7px;padding:5px;background:var(--panel2)}
+  .btn{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:7px 12px;cursor:pointer}
+  .btn:hover{border-color:var(--accent)}
+  .btn.primary{background:var(--accent);color:#08111f;border-color:var(--accent);font-weight:600}
+  section.list{flex:1;min-width:0}
+  .toolbar{display:flex;gap:10px;align-items:center;margin-bottom:10px;flex-wrap:wrap}
+  .count{color:var(--dim)}
+  .card{display:flex;gap:12px;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+        padding:10px;margin-bottom:9px;cursor:pointer;transition:border-color .12s}
+  .card:hover{border-color:#3a4457}
+  .card.fav{border-left:3px solid var(--warn)}
+  .thumb{width:132px;height:99px;flex:none;border-radius:7px;object-fit:cover;background:var(--panel2)}
+  .body{flex:1;min-width:0}
+  .row1{display:flex;gap:10px;align-items:baseline}
+  .title{font-weight:600;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .price{font-size:17px;font-weight:700;white-space:nowrap}
+  .ppm{color:var(--dim);font-size:12px;white-space:nowrap}
+  .meta{color:var(--dim);font-size:12.5px;margin-top:4px;display:flex;gap:12px;flex-wrap:wrap}
+  .tags{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap;align-items:center}
+  .tag{font-size:11px;padding:2px 8px;border-radius:20px;background:var(--panel2);color:var(--dim)}
+  .tag.new{background:rgba(61,220,151,.15);color:var(--good)}
+  .tag.down{background:rgba(255,107,107,.15);color:var(--bad)}
+  .tag.biz{background:rgba(255,197,92,.13);color:var(--warn)}
+  .tag.deal{background:rgba(61,220,151,.18);color:var(--good);font-weight:600}
+  .tag.terms{background:rgba(152,160,179,.16);color:#c3cad8}
+  .acts{display:flex;flex-direction:column;gap:6px;justify-content:center}
+  .icon{background:var(--panel2);border:1px solid var(--line);border-radius:7px;width:32px;height:29px;
+        cursor:pointer;color:var(--dim);line-height:1}
+  .icon.on{color:var(--warn);border-color:var(--warn)}
+  .down{color:var(--bad)} .up{color:var(--good)}
+  .muted{color:var(--dim)}
+  .drawer{position:fixed;inset:0 0 0 auto;width:min(760px,100vw);background:var(--panel);
+          border-left:1px solid var(--line);z-index:1200;overflow:auto;padding:18px;
+          transform:translateX(100%);transition:transform .18s ease}
+  .drawer.open{transform:none}
+  .backdrop{position:fixed;inset:0;background:#0008;z-index:1190;display:none}
+  .backdrop.open{display:block}
+  .gallery{display:flex;gap:7px;overflow-x:auto;padding-bottom:6px}
+  .gallery img{height:190px;border-radius:8px;cursor:zoom-in}
+  table.kv{width:100%;border-collapse:collapse;margin-top:10px}
+  table.kv td{padding:5px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+  table.kv td:first-child{color:var(--dim);width:210px}
+  table.data{width:100%;border-collapse:collapse}
+  table.data th,table.data td{padding:7px 10px;border-bottom:1px solid var(--line);text-align:right}
+  table.data th:first-child,table.data td:first-child{text-align:left}
+  table.data th{color:var(--dim);font-weight:500;font-size:12px;text-transform:uppercase;letter-spacing:.6px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:14px}
+  .panel h4{margin:0 0 10px;font-size:13px;color:var(--dim);text-transform:uppercase;letter-spacing:.7px}
+  #mapView{position:relative;z-index:0;height:calc(100vh - 150px);min-height:420px;
+           border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+  #map{position:absolute;inset:0;background:#0b0d12}
+  .leaflet-container{background:#0b0d12;font:inherit}
+  .leaflet-popup-content-wrapper,.leaflet-popup-tip{background:var(--panel);color:var(--text);
+      border:1px solid var(--line);box-shadow:0 10px 30px #000a}
+  .leaflet-popup-content{margin:9px 11px;width:296px!important;max-height:330px;overflow:auto}
+  .leaflet-popup-close-button{color:var(--dim)!important}
+  .leaflet-bar a,.leaflet-control-layers{background:var(--panel2);color:var(--text);
+      border-color:var(--line)!important}
+  .leaflet-bar a:hover{background:var(--panel)}
+  .leaflet-control-attribution{background:#0b0d12cc!important;color:var(--dim)!important}
+  .leaflet-control-attribution a{color:var(--dim)!important}
+  .maptip{background:var(--panel);border:1px solid var(--line);color:var(--text);
+          border-radius:7px;padding:3px 7px;font-size:12px;box-shadow:none;white-space:nowrap}
+  .maptip:before{display:none}
+  .mp-item{display:flex;gap:8px;padding:6px 0;border-bottom:1px solid var(--line);cursor:pointer}
+  .mp-item:last-child{border-bottom:0}
+  .mp-item:hover .mp-t{color:var(--accent)}
+  .mp-item img{width:64px;height:48px;flex:none;border-radius:5px;object-fit:cover;background:var(--panel2)}
+  .mp-t{font-size:13px;font-weight:600}
+  .mp-s{color:var(--dim);font-size:11.5px}
+  .legend{position:absolute;right:10px;bottom:24px;z-index:500;background:var(--panel);
+          border:1px solid var(--line);border-radius:9px;padding:9px 11px;font-size:12px;line-height:1.7}
+  .legend i{display:inline-block;width:11px;height:11px;border-radius:50%;margin-right:7px;vertical-align:-1px}
+  .ctlbar{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;margin-bottom:12px}
+  .ctl{display:flex;flex-direction:column;gap:4px}
+  .ctl label{font-size:11px;text-transform:uppercase;letter-spacing:.7px;color:var(--dim)}
+  .ctl select,.ctl input{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:6px 9px}
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(168px,1fr));gap:12px;margin-bottom:14px}
+  .kpi{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:12px 14px}
+  .kpi .k{font-size:11px;text-transform:uppercase;letter-spacing:.7px;color:var(--dim)}
+  .kpi .v{font-size:23px;font-weight:700;margin-top:5px;line-height:1.15}
+  .kpi .s{font-size:12px;color:var(--dim);margin-top:3px}
+  .chartwrap{position:relative}
+  .chartwrap svg{display:block}
+  .tipbox{position:absolute;pointer-events:none;z-index:20;background:var(--panel2);border:1px solid var(--line);
+          border-radius:8px;padding:7px 9px;font-size:12px;box-shadow:0 8px 24px #000a;display:none;min-width:150px}
+  .tipbox b{font-size:12.5px}
+  .tiprow{display:flex;align-items:center;gap:7px;justify-content:space-between;margin-top:3px;white-space:nowrap}
+  .tiprow i{display:inline-block;width:9px;height:9px;border-radius:50%;flex:none}
+  .tiprow em{font-style:normal;color:var(--dim);flex:1}
+  .slegend{display:flex;gap:14px;flex-wrap:wrap;margin:2px 0 10px;font-size:12.5px;color:var(--dim)}
+  .slegend span{display:flex;align-items:center;gap:6px}
+  .slegend i{display:inline-block;width:11px;height:3px;border-radius:2px}
+  .scroll-x{overflow-x:auto}
+  table.data td.num{font-variant-numeric:tabular-nums}
+  .empty{padding:50px;text-align:center;color:var(--dim)}
+  .pager{display:flex;gap:8px;justify-content:center;padding:14px}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">999<span style="color:var(--accent)">.md</span></div>
+  <div class="seg" id="profiles"></div>
+  <div class="seg" id="tabs"></div>
+  <div class="seg" id="view">
+    <button data-v="list">Список</button>
+    <button data-v="map">Карта</button>
+  </div>
+  <input id="search" placeholder="поиск: улица, текст, id…">
+  <div class="grow"></div>
+  <span class="muted" id="dbinfo"></span>
+</header>
+
+<main>
+  <aside>
+    <h3>Цена, EUR</h3>
+    <div class="pair"><input type="number" id="price_min" placeholder="от"><input type="number" id="price_max" placeholder="до"></div>
+    <h3>Цена за m²</h3>
+    <div class="pair"><input type="number" id="ppm_min" placeholder="от"><input type="number" id="ppm_max" placeholder="до"></div>
+
+    <div class="apt-only">
+      <h3>Комнат</h3>
+      <div class="chips" id="rooms"></div>
+      <h3>Площадь, m²</h3>
+      <div class="pair"><input type="number" id="area_min" placeholder="от"><input type="number" id="area_max" placeholder="до"></div>
+      <h3>Этаж</h3>
+      <div class="pair"><input type="number" id="floor_min" placeholder="от"><input type="number" id="floor_max" placeholder="до"></div>
+      <label class="check"><input type="checkbox" id="not_first"> не первый этаж</label>
+      <label class="check"><input type="checkbox" id="not_last"> не последний этаж</label>
+      <h3>Жилой фонд</h3>
+      <div class="chips" id="housing"></div>
+    </div>
+
+    <h3>Сектор</h3>
+    <div class="multi" id="districts"></div>
+
+    <div class="deals-only">
+      <h3>Правила выгодных</h3>
+      <div class="muted" style="font-size:12px;margin-bottom:8px">
+        Жёстко: в черте Кишинёва, не первый и не последний этаж, площадь от указанной.
+        Сравнение — с медианой цены за m² в том же секторе, при том же числе комнат
+        и том же жилом фонде. Рассрочка и «белый вариант» по умолчанию скрыты.
+      </div>
+      <label class="muted" style="font-size:12px">дешевле медианы на, % — от / до</label>
+      <div class="pair"><input type="number" id="discount_min" placeholder="15"><input type="number" id="discount_max" placeholder="60"></div>
+      <label class="muted" style="font-size:12px">минимальная площадь, m²</label>
+      <input type="number" id="min_area" placeholder="30">
+      <label class="muted" style="font-size:12px">минимум лотов в выборке для сравнения</label>
+      <input type="number" id="pool_min" placeholder="8">
+      <label class="check" style="margin-top:8px"><input type="checkbox" id="show_terms">
+        показывать рассрочку и «белый вариант»</label>
+    </div>
+
+    <h3>Автор</h3>
+    <div class="chips" id="author">
+      <span class="chip" data-v="">любой</span>
+      <span class="chip" data-v="private">частник</span>
+      <span class="chip" data-v="business">агентство</span>
+    </div>
+
+    <h3>Прочее</h3>
+    <label class="check"><input type="checkbox" id="has_photo"> только с фото</label>
+    <label class="check"><input type="checkbox" id="show_hidden"> показывать скрытые</label>
+    <h3>Размещено не позже, дней</h3>
+    <input type="number" id="age_max" placeholder="напр. 14">
+    <h3>Просмотров не меньше</h3>
+    <input type="number" id="views_min" placeholder="напр. 500">
+
+    <div style="display:flex;gap:8px;margin-top:16px">
+      <button class="btn primary grow" id="apply">Применить</button>
+      <button class="btn" id="reset">Сброс</button>
+    </div>
+  </aside>
+
+  <section class="list">
+    <div class="toolbar">
+      <span class="count" id="count"></span>
+      <div class="grow"></div>
+      <label class="muted">сортировка</label>
+      <select id="sort" style="background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:6px 9px">
+        <option value="discount">по выгоде к медиане</option>
+        <option value="posted">по дате размещения</option>
+        <option value="first_seen">по появлению в базе</option>
+        <option value="changed">по дате смены цены</option>
+        <option value="drop_pct">по размеру скидки, %</option>
+        <option value="drop_abs">по размеру скидки, EUR</option>
+        <option value="price">по цене</option>
+        <option value="ppm">по цене за m²</option>
+        <option value="area">по площади</option>
+        <option value="views">по просмотрам</option>
+      </select>
+      <select id="dir" style="background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:6px 9px">
+        <option value="desc">по убыванию</option>
+        <option value="asc">по возрастанию</option>
+      </select>
+    </div>
+    <div id="results"></div>
+    <div class="pager" id="pager"></div>
+  </section>
+
+  <section class="list" id="statsView" style="display:none"></section>
+
+  <section class="list" id="trendsView" style="display:none"></section>
+
+  <section class="list" id="mapWrap" style="display:none">
+    <div class="toolbar">
+      <span class="count" id="mapcount"></span>
+      <div class="grow"></div>
+      <span class="muted">клик по точке — список лотов в этом доме</span>
+    </div>
+    <div id="mapView"><div id="map"></div><div class="legend" id="legend" style="display:none"></div></div>
+  </section>
+</main>
+
+<div class="backdrop" id="backdrop"></div>
+<div class="drawer" id="drawer"></div>
+
+<script>
+const $ = s => document.querySelector(s);
+const hash = new URLSearchParams(location.hash.slice(1));
+const state = {
+  profile: hash.get('profile') || 'apartments', tab: hash.get('tab') || 'new',
+  view: hash.get('view') === 'map' ? 'map' : 'list', offset: 0, limit: 50,
+  rooms: new Set(), housing: new Set(), districts: new Set(), author: '', meta: null,
+  trend: {metric: hash.get('metric') || 'med_ppm', group: hash.get('group') || 'none',
+          months: +(hash.get('months') || 24), min_n: +(hash.get('min_n') || 8),
+          smooth: +(hash.get('smooth') || 3), gone: hash.get('gone') || 'both', data: null}
+};
+const fmt = n => n == null ? '—' : Math.round(n).toLocaleString('ru-RU').replace(/ /g,' ');
+const esc = s => (s ?? '').toString().replace(/[<>&"]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]));
+const short = s => (s || '').slice(0, 10);
+const days = s => { if(!s) return null;
+  const d = new Date(s.replace(' ','T')); const now = new Date();
+  const a = Date.UTC(d.getFullYear(), d.getMonth(), d.getDate());
+  const b = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
+  return Math.round((b - a) / 86400000); };
+
+function syncHash(){
+  const t = state.trend;
+  const extra = state.tab === 'trends'
+    ? `&metric=${t.metric}&group=${t.group}&months=${t.months}&smooth=${t.smooth}&min_n=${t.min_n}&gone=${t.gone}` : '';
+  location.replace('#profile=' + state.profile + '&tab=' + state.tab + '&view=' + state.view + extra);
+}
+async function loadMeta(){
+  syncHash();
+  state.meta = await (await fetch('/api/meta')).json();
+  const m = state.meta;
+  $('#profiles').innerHTML = m.profiles.map(p =>
+    `<button data-p="${p.key}" class="${p.key===state.profile?'on':''}">${p.title}<span class="badge">${p.count}</span></button>`).join('');
+  $('#profiles').onclick = e => { const b = e.target.closest('button'); if(!b) return;
+    state.profile = b.dataset.p; state.offset = 0; state.districts.clear(); state.housing.clear();
+    loadMeta(); };
+  const p = m.profiles.find(x => x.key === state.profile) || {};
+  const tabs = [['deals','Выгодные',p.deals],['new',`Новые`,p.recent7],['down','Подешевели',p.down],['all','Все',p.count],
+                ['fav','Избранное',''],['hidden','Скрытые',''],['stats','Статистика',''],['trends','Динамика','']];
+  $('#tabs').innerHTML = tabs.map(([k,t,b]) =>
+    `<button data-t="${k}" class="${k===state.tab?'on':''}">${t}${b!==''&&b!=null?`<span class="badge">${b}</span>`:''}</button>`).join('');
+  $('#tabs').onclick = e => { const b = e.target.closest('button'); if(!b) return;
+    state.tab = b.dataset.t; state.offset = 0; state.sortTouched = false; loadMeta(); };
+
+  const isApt = state.profile === 'apartments';
+  document.querySelectorAll('.apt-only').forEach(el => el.style.display = isApt ? '' : 'none');
+  document.querySelectorAll('.deals-only').forEach(el =>
+    el.style.display = (state.tab === 'deals' && isApt) ? '' : 'none');
+  const c = m.counts[state.profile] || {districts:[],housing:[],developers:[]};
+  $('#districts').innerHTML = c.districts.map(d =>
+    `<label class="check"><input type="checkbox" data-d="${esc(d)}" ${state.districts.has(d)?'checked':''}> ${esc(d)}</label>`).join('') || '<span class="muted">нет данных</span>';
+  $('#housing').innerHTML = c.housing.map(h =>
+    `<span class="chip ${state.housing.has(h)?'on':''}" data-h="${esc(h)}">${esc(h)}</span>`).join('');
+  $('#rooms').innerHTML = [['0','студия'],['1','1'],['2','2'],['3','3'],['4','4'],['5','5+']]
+    .map(([v,t]) => `<span class="chip ${state.rooms.has(v)?'on':''}" data-r="${v}">${t}</span>`).join('');
+  $('#dbinfo').textContent = `карточек: ${m.details_done} · сбор: ${(m.runs[0]||{}).finished || '—'}`;
+
+  $('#housing').onclick = e => toggle(e, 'h', state.housing);
+  $('#rooms').onclick   = e => toggle(e, 'r', state.rooms);
+  $('#districts').onchange = e => { const cb = e.target;
+    cb.checked ? state.districts.add(cb.dataset.d) : state.districts.delete(cb.dataset.d); };
+  $('#author').onclick = e => { const chip = e.target.closest('.chip'); if(!chip) return;
+    state.author = chip.dataset.v;
+    $('#author').querySelectorAll('.chip').forEach(c2 => c2.classList.toggle('on', c2 === chip)); };
+
+  const onStats = state.tab === 'stats';
+  const onTrends = state.tab === 'trends';
+  const onMap = !onStats && !onTrends && state.view === 'map';
+  document.querySelector('aside').style.display = onStats ? 'none' : '';
+  $('.list').style.display = (onStats || onTrends || onMap) ? 'none' : '';
+  $('#statsView').style.display = onStats ? '' : 'none';
+  $('#trendsView').style.display = onTrends ? '' : 'none';
+  $('#mapWrap').style.display = onMap ? '' : 'none';
+  $('#view').style.display = (onStats || onTrends) ? 'none' : '';
+  $('#view').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.v === state.view));
+  const onDeals = state.tab === 'deals';
+  $('#sort').querySelector('[value=discount]').disabled = !onDeals;
+  if(onDeals && !state.sortTouched) $('#sort').value = 'discount';
+  if(!onDeals && $('#sort').value === 'discount') $('#sort').value = 'posted';
+  refresh();
+}
+function refresh(){
+  if(state.tab === 'stats') loadStats();
+  else if(state.tab === 'trends') loadTrends();
+  else if(state.view === 'map') loadMap();
+  else load();
+}
+function toggle(e, key, set){
+  const chip = e.target.closest('.chip'); if(!chip) return;
+  const v = chip.dataset[key];
+  set.has(v) ? set.delete(v) : set.add(v);
+  chip.classList.toggle('on');
+}
+
+function query(){
+  const q = new URLSearchParams({profile: state.profile, tab: state.tab,
+    sort: $('#sort').value, dir: $('#dir').value, limit: state.limit, offset: state.offset});
+  const add = (k, v) => { if(v !== '' && v != null) q.set(k, v); };
+  ['price_min','price_max','ppm_min','ppm_max','area_min','area_max','floor_min','floor_max','age_max','views_min',
+   'discount_min','discount_max','min_area','pool_min']
+    .forEach(id => add(id, $('#'+id).value));
+  add('q', $('#search').value.trim());
+  if($('#not_first').checked) q.set('not_first','1');
+  if($('#not_last').checked) q.set('not_last','1');
+  if($('#has_photo').checked) q.set('has_photo','1');
+  if($('#show_hidden').checked) q.set('show_hidden','1');
+  if($('#show_terms').checked) q.set('show_terms','1');
+  if(state.rooms.size) q.set('rooms', [...state.rooms].join(','));
+  if(state.housing.size) q.set('housing', [...state.housing].join(','));
+  if(state.districts.size) q.set('districts', [...state.districts].join(','));
+  if(state.author) q.set('author', state.author);
+  return q;
+}
+
+function spark(hist, w = 108, h = 26){
+  if(!hist || hist.length < 2) return '';
+  const ys = hist.map(p => p[1]);
+  const min = Math.min(...ys), max = Math.max(...ys), span = (max - min) || 1;
+  const pts = ys.map((y, i) => `${(i/(ys.length-1))*w},${h - ((y-min)/span)*(h-4) - 2}`).join(' ');
+  const color = ys.at(-1) < ys[0] ? 'var(--bad)' : 'var(--good)';
+  return `<svg width="${w}" height="${h}"><polyline points="${pts}" fill="none" stroke="${color}" stroke-width="1.8"/></svg>`;
+}
+
+function card(a){
+  const dropAbs = a.drop_abs ?? (a.old_price && a.old_price > a.price ? a.price - a.old_price : null);
+  const dropBase = a.prev_price ?? a.old_price;
+  const dropPct = dropAbs && dropBase ? dropAbs / dropBase * 100 : null;
+  const age = days(a.posted);
+  const tags = [];
+  if(a.is_new) tags.push('<span class="tag new">новое в базе</span>');
+  if(age != null && age <= 3) tags.push(`<span class="tag new">размещено ${age === 0 ? 'сегодня' : age + ' дн. назад'}</span>`);
+  if(dropAbs) tags.push(`<span class="tag down">↓ ${fmt(Math.abs(dropAbs))} EUR (${dropPct.toFixed(1)}%)</span>`);
+  if(a.discount != null) tags.push(`<span class="tag deal">выгода −${a.discount.toFixed(0)}% к медиане `
+    + `${esc(a.district)} · ${a.rooms_n}к (${fmt(a.med_ppm)} EUR/m², выборка ${a.pool_n})</span>`);
+  if(a.terms_flag) tags.push('<span class="tag terms">рассрочка / не под ключ</span>');
+  if(a.owner_is_business) tags.push('<span class="tag biz">агентство</span>');
+  if(a.housing_stock) tags.push(`<span class="tag">${esc(a.housing_stock)}</span>`);
+  if(a.developer) tags.push(`<span class="tag">${esc(a.developer)}</span>`);
+
+  const geom = state.profile === 'apartments'
+    ? [a.rooms_n != null ? (a.rooms_n === 0 ? 'студия' : a.rooms_n + '-комн.') : null,
+       a.area ? a.area + ' m²' : null,
+       a.floor ? `${a.floor}/${a.floors_total || '?'} эт.` : null].filter(Boolean).join(' · ')
+    : '';
+
+  return `<div class="card ${a.favorite?'fav':''}" data-id="${a.id}">
+    <img class="thumb" loading="lazy" src="${a.photos[0] ? esc(a.photos[0].replace('900x900','320x240')) : ''}" onerror="this.style.visibility='hidden'">
+    <div class="body">
+      <div class="row1">
+        <div class="title">${esc(a.title)}</div>
+        <div class="price">${fmt(a.price)} ${esc(a.currency)}</div>
+      </div>
+      <div class="meta">
+        ${geom ? `<span>${geom}</span>` : ''}
+        ${a.ppm ? `<span class="ppm">${fmt(a.ppm)} EUR/m²</span>` : ''}
+        ${a.district ? `<span>${esc(a.district)}</span>` : ''}
+        ${a.street ? `<span>${esc(a.street)} ${esc(a.house||'')}</span>` : ''}
+      </div>
+      <div class="meta">
+        <span>размещено ${short(a.posted) || '—'}${age!=null?` (${age} дн.)`:''}</span>
+        <span>просмотров ${fmt(a.views_total)}</span>
+        <span>фото ${a.photos_count ?? 0}</span>
+        ${a.phones ? `<span>${esc(a.phones)}</span>` : ''}
+      </div>
+      <div class="tags">${tags.join('')}${spark(a.hist)}</div>
+    </div>
+    <div class="acts">
+      <button class="icon ${a.favorite?'on':''}" data-act="fav" title="в избранное">★</button>
+      <button class="icon" data-act="hide" title="скрыть">✕</button>
+      <a class="icon" style="display:grid;place-items:center" href="https://999.md/ru/${a.id}" target="_blank" title="открыть на 999.md">↗</a>
+    </div>
+  </div>`;
+}
+
+async function load(){
+  $('#results').innerHTML = '<div class="empty">загрузка…</div>';
+  const data = await (await fetch('/api/ads?' + query())).json();
+  if(data.error){ $('#results').innerHTML = `<div class="empty">${esc(data.error)}</div>`; return; }
+  $('#count').textContent = `найдено ${data.total}` + (data.total > state.limit
+    ? ` · показаны ${state.offset+1}–${Math.min(state.offset+state.limit, data.total)}` : '');
+  $('#results').innerHTML = data.items.length ? data.items.map(card).join('')
+    : '<div class="empty">Ничего не найдено. Ослабьте фильтры.</div>';
+  const pages = Math.ceil(data.total / state.limit);
+  const page = Math.floor(state.offset / state.limit) + 1;
+  $('#pager').innerHTML = pages > 1
+    ? `<button class="btn" ${page<=1?'disabled':''} data-go="${state.offset-state.limit}">← назад</button>
+       <span class="muted" style="padding:7px">стр. ${page} из ${pages}</span>
+       <button class="btn" ${page>=pages?'disabled':''} data-go="${state.offset+state.limit}">вперёд →</button>` : '';
+}
+
+$('#pager').onclick = e => { const b = e.target.closest('[data-go]'); if(!b) return;
+  state.offset = Math.max(0, +b.dataset.go); load(); window.scrollTo({top:0,behavior:'smooth'}); };
+
+$('#results').onclick = async e => {
+  const btn = e.target.closest('[data-act]');
+  const cardEl = e.target.closest('.card');
+  if(!cardEl) return;
+  const id = cardEl.dataset.id;
+  if(btn){
+    e.stopPropagation();
+    const body = btn.dataset.act === 'fav'
+      ? {id, favorite: btn.classList.contains('on') ? 0 : 1}
+      : {id, hidden: 1};
+    const r = await (await fetch('/api/flag', {method:'POST', body: JSON.stringify(body)})).json();
+    if(btn.dataset.act === 'fav'){ btn.classList.toggle('on', !!r.favorite); cardEl.classList.toggle('fav', !!r.favorite); }
+    else cardEl.remove();
+    return;
+  }
+  openAd(id);
+};
+
+function chart(history, w = 660, h = 190){
+  if(!history || history.length < 2)
+    return '<div class="muted" style="padding:14px 0">История цены появится после следующих прогонов сборщика.</div>';
+  const pad = {l:62, r:12, t:12, b:26};
+  const ys = history.map(p => p.price), xs = history.map(p => new Date(p.ts.replace(' ','T')).getTime());
+  const minY = Math.min(...ys) * 0.98, maxY = Math.max(...ys) * 1.02;
+  const minX = Math.min(...xs), maxX = Math.max(...xs) || minX + 1;
+  const px = t => pad.l + ((t - minX) / ((maxX - minX) || 1)) * (w - pad.l - pad.r);
+  const py = v => h - pad.b - ((v - minY) / ((maxY - minY) || 1)) * (h - pad.t - pad.b);
+  const pts = history.map(p => `${px(new Date(p.ts.replace(' ','T')).getTime())},${py(p.price)}`).join(' ');
+  const ticks = [minY, (minY+maxY)/2, maxY].map(v =>
+    `<line x1="${pad.l}" x2="${w-pad.r}" y1="${py(v)}" y2="${py(v)}" stroke="var(--line)"/>
+     <text x="${pad.l-8}" y="${py(v)+4}" fill="var(--dim)" font-size="11" text-anchor="end">${fmt(v)}</text>`).join('');
+  const dots = history.map(p =>
+    `<circle cx="${px(new Date(p.ts.replace(' ','T')).getTime())}" cy="${py(p.price)}" r="3.5" fill="var(--accent)"/>`).join('');
+  return `<svg width="${w}" height="${h}" style="max-width:100%">${ticks}
+    <polyline points="${pts}" fill="none" stroke="var(--accent)" stroke-width="2"/>${dots}
+    <text x="${pad.l}" y="${h-7}" fill="var(--dim)" font-size="11">${short(history[0].ts)}</text>
+    <text x="${w-pad.r}" y="${h-7}" fill="var(--dim)" font-size="11" text-anchor="end">${short(history.at(-1).ts)}</text>
+  </svg>`;
+}
+
+async function openAd(id){
+  $('#backdrop').classList.add('open');
+  $('#drawer').classList.add('open');
+  $('#drawer').innerHTML = '<div class="empty">загрузка…</div>';
+  const a = await (await fetch('/api/ad/' + id)).json();
+  const feats = Object.entries(a.features || {})
+    .filter(([k,v]) => v && !['Фотографии','Контакты','Текст объявления','Карта'].includes(k))
+    .map(([k,v]) => `<tr><td>${esc(k)}</td><td>${esc(v)}</td></tr>`).join('');
+  $('#drawer').innerHTML = `
+    <div style="display:flex;gap:10px;align-items:center;margin-bottom:12px">
+      <button class="btn" onclick="closeAd()">← закрыть</button>
+      <a class="btn" href="https://999.md/ru/${a.id}" target="_blank">открыть на 999.md ↗</a>
+      ${a.lat ? `<a class="btn" href="https://www.google.com/maps?q=${a.lat},${a.lon}" target="_blank">на карте ↗</a>` : ''}
+      <div class="grow"></div>
+      <span class="muted">id ${a.id}</span>
+    </div>
+    <h2 style="margin:0 0 6px">${esc(a.title)}</h2>
+    <div style="display:flex;gap:16px;align-items:baseline;margin-bottom:12px">
+      <span class="price" style="font-size:24px">${fmt(a.price)} ${esc(a.currency)}</span>
+      ${a.ppm ? `<span class="ppm">${fmt(a.ppm)} EUR/m²</span>` : ''}
+      ${a.prev_price ? `<span class="${a.price<a.prev_price?'down':'up'}">было ${fmt(a.prev_price)}</span>` : ''}
+      ${a.old_price ? `<span class="down">на сайте указана старая цена ${fmt(a.old_price)}</span>` : ''}
+    </div>
+    <div class="gallery">${(a.photos||[]).map(u =>
+      `<img loading="lazy" src="${esc(u)}" onclick="window.open('${esc(u)}','_blank')">`).join('') || '<span class="muted">фото нет</span>'}</div>
+    <div class="panel" style="margin-top:14px"><h4>История цены</h4>${chart(a.history)}</div>
+    <div class="panel" style="margin-top:14px"><h4>Характеристики</h4>
+      <table class="kv">
+        ${a.phones ? `<tr><td>Телефон</td><td>${esc(a.phones)}</td></tr>` : ''}
+        <tr><td>Адрес</td><td>${[a.city,a.district,a.street,a.house].filter(Boolean).map(esc).join(', ') || '—'}</td></tr>
+        <tr><td>Размещено</td><td>${esc(a.posted) || '—'} ${days(a.posted)!=null?`(${days(a.posted)} дн. назад)`:''}</td></tr>
+        <tr><td>Поднято</td><td>${esc(a.reseted) || '—'}</td></tr>
+        <tr><td>Действует до</td><td>${esc(a.expire) || '—'}</td></tr>
+        <tr><td>Просмотров</td><td>${fmt(a.views_total)} (сегодня ${fmt(a.views_today)})</td></tr>
+        <tr><td>Автор</td><td>${a.owner_login
+          ? `${esc(a.owner_login)} — ${esc(a.author_type)||'—'}${a.owner_is_business?', агентство':''}, на сайте с ${short(a.owner_registered)||'—'}`
+          : esc(a.author_type) || (a.owner_is_business ? 'агентство' : 'частное лицо')}</td></tr>
+        <tr><td>В базе с</td><td>${esc(a.first_seen)}, последний раз виден ${esc(a.last_seen)}</td></tr>
+        ${feats}
+      </table>
+    </div>
+    <div class="panel" style="margin-top:14px"><h4>Текст объявления</h4>
+      <div style="white-space:pre-wrap">${esc(a.description) || '—'}</div></div>
+    <div style="height:24px"></div>`;
+}
+function closeAd(){ $('#drawer').classList.remove('open'); $('#backdrop').classList.remove('open'); }
+$('#backdrop').onclick = closeAd;
+document.addEventListener('keydown', e => { if(e.key === 'Escape') closeAd(); });
+
+const MAP_COLORS = ['#3ddc97','#9ede4a','#ffc55c','#ff9f43','#ff6b6b'];  // дёшево → дорого
+let map, mapLayer, mapBounds = null, mapKey = '';
+
+function loadLeaflet(){
+  if(window._leaflet) return window._leaflet;
+  window._leaflet = new Promise((ok, fail) => {
+    const css = document.createElement('link');
+    css.rel = 'stylesheet'; css.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+    document.head.appendChild(css);
+    const js = document.createElement('script');
+    js.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+    js.onload = ok; js.onerror = () => fail(new Error('cdn'));
+    document.head.appendChild(js);
+  });
+  return window._leaflet;
+}
+
+function popupHtml(arr){
+  const a0 = arr[0];
+  const head = `<div class="mp-s" style="margin-bottom:6px">
+      ${esc([a0.street, a0.house].filter(Boolean).join(' ')) || 'адрес не указан'}
+      ${a0.district ? '· ' + esc(a0.district) : ''} · ${arr.length} лот.</div>`;
+  const rows = arr.slice(0, 25).map(p => {
+    const geom = [p.rooms_n != null ? (p.rooms_n === 0 ? 'студия' : p.rooms_n + '-комн.') : null,
+                  p.area ? p.area + ' m²' : null,
+                  p.floor ? `${p.floor}/${p.floors_total || '?'} эт.` : null].filter(Boolean).join(' · ');
+    const extra = [p.discount != null ? `выгода −${p.discount.toFixed(0)}%` : null,
+                   p.drop_pct != null && p.drop_pct < 0 ? `подешевело на ${Math.abs(p.drop_pct).toFixed(1)}%` : null,
+                   p.housing_stock || null,
+                   p.owner_is_business ? 'агентство' : null].filter(Boolean).join(' · ');
+    return `<div class="mp-item" data-id="${p.id}">
+      <img loading="lazy" src="${p.photo ? esc(p.photo.replace('900x900','320x240')) : ''}"
+           onerror="this.style.visibility='hidden'">
+      <div style="min-width:0">
+        <div class="mp-t">${fmt(p.price)} ${esc(p.currency)}
+          ${p.ppm ? `<span class="mp-s">· ${fmt(p.ppm)} EUR/m²</span>` : ''}</div>
+        <div class="mp-s">${esc(geom)}</div>
+        ${extra ? `<div class="mp-s">${esc(extra)}</div>` : ''}
+      </div></div>`;
+  }).join('');
+  const tail = arr.length > 25 ? `<div class="mp-s" style="padding-top:6px">…и ещё ${arr.length - 25}</div>` : '';
+  return head + rows + tail;
+}
+
+async function loadMap(){
+  $('#mapcount').textContent = 'загрузка карты…';
+  try { await loadLeaflet(); }
+  catch(_){
+    $('#mapcount').textContent = 'карта недоступна';
+    $('#legend').style.display = 'none';
+    $('#mapView').insertAdjacentHTML('beforeend',
+      '<div class="empty" style="position:absolute;inset:0;z-index:600;background:var(--panel)">'
+      + 'Не удалось загрузить Leaflet с unpkg.com — для карты нужен интернет.</div>');
+    return;
+  }
+  const q = query(); q.delete('limit'); q.delete('offset');
+  const data = await (await fetch('/api/map?' + q)).json();
+  if(data.error){ $('#mapcount').textContent = data.error; return; }
+
+  const groups = new Map();
+  for(const p of data.points){
+    const key = p.lat.toFixed(5) + ',' + p.lon.toFixed(5);
+    if(!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(p);
+  }
+
+  const byDeal = state.tab === 'deals' && data.points.some(p => p.discount != null);
+  const hasPpm = data.points.some(p => p.ppm != null);
+  const value = p => byDeal ? p.discount : (hasPpm ? p.ppm : p.price);
+  const invert = byDeal;
+  const vals = data.points.map(value).filter(v => v != null).sort((a, b) => a - b);
+  const qt = f => vals.length ? vals[Math.min(vals.length - 1, Math.floor(vals.length * f))] : 0;
+  const breaks = [qt(.2), qt(.4), qt(.6), qt(.8)];
+  const colorOf = v => {
+    if(v == null) return '#7a839a';
+    let i = 0; while(i < 4 && v >= breaks[i]) i++;
+    return MAP_COLORS[invert ? 4 - i : i];
+  };
+
+  if(!map){
+    map = L.map('map', {preferCanvas: true}).setView([47.024, 28.832], 12);
+    const esri = 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/';
+    const dark = L.layerGroup([
+      L.tileLayer(esri + 'World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}',
+        {maxZoom: 19, maxNativeZoom: 16, attribution: '© Esri, © OpenStreetMap'}),
+      L.tileLayer(esri + 'World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}', {maxZoom: 19, maxNativeZoom: 16})
+    ]).addTo(map);
+    const light = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+      {maxZoom: 19, attribution: '© OpenStreetMap'});
+    L.control.layers({'тёмная': dark, 'обычная': light}, null, {position: 'topright'}).addTo(map);
+  }
+  if(mapLayer) mapLayer.remove();
+  mapLayer = L.layerGroup().addTo(map);
+
+  const unit = byDeal ? '%' : 'EUR' + (hasPpm ? '/m²' : '');
+  const pts = [];
+  for(const [key, arr] of groups){
+    const [lat, lon] = key.split(',').map(Number);
+    const vs = arr.map(value).filter(v => v != null).sort((a, b) => a - b);
+    const med = vs.length ? vs[Math.floor(vs.length / 2)] : null;
+    const fav = arr.some(p => p.favorite);
+    const marker = L.circleMarker([lat, lon], {
+      radius: 4.5 + Math.min(Math.sqrt(arr.length) * 1.9, 9),
+      color: fav ? '#ffc55c' : '#0b0d12', weight: fav ? 2 : 1,
+      fillColor: colorOf(med), fillOpacity: .85
+    });
+    marker.bindTooltip(
+      arr.length > 1 ? `${arr.length} лот. · медиана ${fmt(med)} ${unit}`
+                     : `${fmt(arr[0].price)} ${esc(arr[0].currency)}${arr[0].ppm ? ` · ${fmt(arr[0].ppm)} EUR/m²` : ''}`,
+      {className: 'maptip', direction: 'top'});
+    marker.bindPopup(() => popupHtml(arr), {maxWidth: 320, autoPanPadding: [30, 30]});
+    marker.addTo(mapLayer);
+    pts.push([lat, lon]);
+  }
+
+  $('#mapcount').textContent = `на карте ${data.shown} лот. в ${groups.size} точках`
+    + (data.capped ? ` (из ${data.total} — показаны первые)` : '');
+
+  if(pts.length){
+    mapBounds = L.latLngBounds(pts);
+    const key = state.profile + '|' + state.tab;
+    if(key !== mapKey){ map.fitBounds(mapBounds, {padding: [24, 24]}); mapKey = key; }
+    const titles = [`до ${fmt(breaks[0])}`, `${fmt(breaks[0])}–${fmt(breaks[1])}`,
+                    `${fmt(breaks[1])}–${fmt(breaks[2])}`, `${fmt(breaks[2])}–${fmt(breaks[3])}`,
+                    `от ${fmt(breaks[3])}`];
+    $('#legend').style.display = '';
+    $('#legend').innerHTML =
+      `<div style="color:var(--dim);margin-bottom:3px">${byDeal ? 'выгода к медиане, %' : (hasPpm ? 'цена за m², EUR' : 'цена, EUR')}</div>`
+      + titles.map((t, i) => `<div><i style="background:${MAP_COLORS[invert ? 4 - i : i]}"></i>${t}</div>`).join('')
+      + `<div class="mp-s" style="margin-top:4px">размер точки — число лотов в доме</div>`
+      + `<button class="btn" id="fit" style="margin-top:7px;padding:4px 9px;font-size:12px">вписать всё</button>`;
+  } else {
+    $('#legend').style.display = 'none';
+  }
+  setTimeout(() => map.invalidateSize(), 0);
+}
+
+$('#mapView').addEventListener('click', e => {
+  const fit = e.target.closest('#fit');
+  if(fit){ if(mapBounds) map.fitBounds(mapBounds, {padding: [24, 24]}); return; }
+  const item = e.target.closest('.mp-item');
+  if(item){ map.closePopup(); openAd(item.dataset.id); }
+});
+
+$('#view').onclick = e => {
+  const b = e.target.closest('button'); if(!b) return;
+  state.view = b.dataset.v; state.offset = 0; syncHash(); loadMeta();
+};
+
+function bars(rows, labelKey, valueKey, unit){
+  if(!rows.length) return '<div class="muted">нет данных</div>';
+  const max = Math.max(...rows.map(r => r[valueKey] || 0)) || 1;
+  return rows.map(r => `<div style="display:flex;align-items:center;gap:9px;margin:3px 0">
+      <span style="width:130px;color:var(--dim);font-size:12.5px">${esc(r[labelKey] ?? '—')}</span>
+      <div style="flex:1;background:var(--panel2);border-radius:4px;height:17px">
+        <div style="width:${(r[valueKey]/max*100).toFixed(1)}%;background:var(--accent);height:100%;border-radius:4px"></div>
+      </div>
+      <span style="width:96px;text-align:right">${fmt(r[valueKey])} ${unit}</span>
+    </div>`).join('');
+}
+
+async function loadStats(){
+  const s = await (await fetch('/api/stats?profile=' + state.profile)).json();
+  const hasPpm = s.by_district.some(r => r.avg_ppm != null);
+  const pricePanel = hasPpm
+    ? `<h4>Средняя цена за m² по секторам</h4>${bars(s.by_district, 'district', 'avg_ppm', 'EUR')}`
+    : `<h4>Средняя цена по секторам</h4>${bars([...s.by_district].sort((a,b)=>b.avg_price-a.avg_price), 'district', 'avg_price', 'EUR')}`;
+  const roomsPanel = s.by_rooms.length ? `
+    <div class="panel" style="margin-top:14px"><h4>По количеству комнат</h4>
+      <table class="data"><tr><th>Комнат</th><th>Лотов</th><th>Ср. площадь</th><th>Ср. цена</th><th>Ср. EUR/m²</th></tr>
+      ${s.by_rooms.map(r => `<tr><td>${r.rooms === 0 ? 'студия' : r.rooms}</td><td>${fmt(r.n)}</td>
+        <td>${fmt(r.avg_area)} m²</td><td>${fmt(r.avg_price)}</td><td>${fmt(r.avg_ppm)}</td></tr>`).join('')}
+      </table></div>` : '';
+  $('#statsView').innerHTML = `
+    <div class="grid2">
+      <div class="panel">${pricePanel}</div>
+      <div class="panel"><h4>Объявлений по секторам</h4>
+        ${bars([...s.by_district].sort((a,b)=>b.n-a.n), 'district', 'n', 'шт.')}</div>
+    </div>
+    ${roomsPanel}
+    <div class="panel" style="margin-top:14px"><h4>Распределение по цене</h4>
+      ${bars(s.price_hist.map(b => ({label: `${b.bucket_k}–${b.bucket_k+10} тыс.`, n: b.n})), 'label', 'n', 'шт.')}</div>
+    <div class="panel" style="margin-top:14px"><h4>Когда размещены (по месяцам)</h4>
+      ${bars(s.posted, 'month', 'n', 'шт.')}</div>
+    <div class="panel" style="margin-top:14px"><h4>Изменения цены по дням</h4>
+      ${bars(s.changes, 'day', 'n', 'шт.')}
+      <div class="muted" style="margin-top:8px">Первый прогон записывает стартовую цену всем лотам — поэтому в первый день столбик равен размеру базы.</div>
+    </div>
+    <div class="panel" style="margin-top:14px"><h4>Прогоны сборщика</h4>
+      <table class="data"><tr><th>Когда</th><th>Профиль</th><th>Найдено</th><th>Новых</th><th>Ушло</th><th>↓</th><th>↑</th></tr>
+      ${(state.meta.runs||[]).map(r => `<tr><td>${esc(r.finished)}</td><td>${esc(r.profile)}</td>
+        <td>${fmt(r.total)}</td><td>${fmt(r.added)}</td><td>${fmt(r.gone)}</td>
+        <td class="down">${fmt(r.price_down)}</td><td class="up">${fmt(r.price_up)}</td></tr>`).join('')}
+      </table></div>`;
+}
+
+const SERIES_COLORS = ['#3987e5','#d95926','#199e70','#c98500','#d55181','#008300','#9085e9','#e66767'];
+const SERIES_DASH = ['', '', '', '', '7 3', '2 3', '10 3 2 3', '4 2 1 2'];
+const MONTH_RU = ['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'];
+const TREND_METRICS = {
+  med_ppm:   {t: 'медиана EUR/m²',  unit: 'EUR/m²', d: 0},
+  avg_ppm:   {t: 'средняя EUR/m²',  unit: 'EUR/m²', d: 0},
+  med_price: {t: 'медиана цены',    unit: 'EUR',    d: 0},
+  avg_price: {t: 'средняя цена',    unit: 'EUR',    d: 0},
+  med_area:  {t: 'медиана площади', unit: 'm²',     d: 1},
+  n:         {t: 'сколько выставили', unit: 'шт.',  d: 0},
+};
+const TREND_GROUPS_UI = [['none','без группировки'],['rooms','по комнатам'],['district','по секторам'],
+  ['housing','по жилому фонду'],['author','по автору'],['area','по площади'],['floor','по этажу'],
+  ['developer','по застройщику']];
+
+const mlabel = m => MONTH_RU[+m.slice(5,7) - 1] + ' ' + m.slice(2,4);
+const dec = (v, d) => v == null ? '—' : v.toLocaleString('ru-RU', {minimumFractionDigits: d, maximumFractionDigits: d});
+const pct = v => v == null ? '—' : (v > 0 ? '+' : '−') + Math.abs(v).toFixed(1) + '%';
+const pctHtml = v => v == null ? '<span class="muted">—</span>'
+  : `<span style="color:${v > 0 ? 'var(--bad)' : v < 0 ? 'var(--good)' : 'var(--dim)'}">${v > 0 ? '↑' : v < 0 ? '↓' : ''} ${pct(v)}</span>`;
+
+const tvalue = (p, metric) => {
+  if(!p) return null;
+  if(metric === 'n') return p.n || 0;
+  return p[metric] ?? null;
+};
+const tpoint = (p, metric, minN) =>
+  (!p || (metric !== 'n' && p.n < minN)) ? null : tvalue(p, metric);
+
+function slope(values){
+  const pts = values.map((v, i) => [i, v]).filter(p => p[1] != null);
+  if(pts.length < 3) return null;
+  const n = pts.length;
+  const mx = pts.reduce((s, p) => s + p[0], 0) / n, my = pts.reduce((s, p) => s + p[1], 0) / n;
+  const num = pts.reduce((s, p) => s + (p[0] - mx) * (p[1] - my), 0);
+  const den = pts.reduce((s, p) => s + (p[0] - mx) ** 2, 0);
+  return (den && my) ? (num / den) / my * 100 : null;
+}
+
+function smoothVals(vals, k){
+  if(k < 2) return vals.slice();
+  const half = Math.floor(k / 2);
+  return vals.map((v, i) => {
+    if(v == null) return null;
+    const win = [];
+    for(let j = i - half; j <= i + half; j++) if(vals[j] != null) win.push(vals[j]);
+    return win.reduce((s, x) => s + x, 0) / win.length;
+  });
+}
+
+function niceTicks(min, max, count = 5){
+  if(!(max > min)){ const v = max || 1; return [v * 0.9, v, v * 1.1]; }
+  const raw = (max - min) / (count - 1);
+  const mag = 10 ** Math.floor(Math.log10(raw));
+  const step = [1, 2, 2.5, 5, 10].map(s => s * mag).find(s => s >= raw) || mag * 10;
+  const out = [];
+  for(let v = Math.floor(min / step) * step; v <= max + step / 2; v += step) out.push(+v.toFixed(6));
+  return out;
+}
+
+function trendChart(data, metric, width, smooth){
+  const M = TREND_METRICS[metric];
+  const months = data.months, minN = data.min_n;
+  let slot = 0;
+  const rows = data.series.map(s => {
+    const raw = months.map((m, j) => tpoint(s.points[j], metric, minN));
+    const i = s.key === 'не указано' ? -1 : slot++;
+    const color = i < 0 ? 'var(--dim)' : SERIES_COLORS[i % SERIES_COLORS.length];
+    const dash = i < 0 ? '3 3' : SERIES_DASH[i % SERIES_DASH.length];
+    return {key: s.key, color, dash, n: s.n, raw, vals: smoothVals(raw, smooth), ns: s.points.map(p => p.n)};
+  }).filter(r => r.vals.some(v => v != null));
+  if(!rows.length || months.length < 2) return {html: '<div class="empty">данных не хватает — ослабьте фильтры или минимум лотов в месяце</div>', rows: []};
+
+  const direct = rows.length <= 4;
+  const pad = {l: 66, r: direct ? 118 : 16, t: 14, b: 30};
+  const h = 330, w = Math.max(520, width);
+  const flat = rows.flatMap(r => r.vals).filter(v => v != null);
+  let lo = Math.min(...flat), hi = Math.max(...flat);
+  if(metric === 'n') lo = 0;
+  const ticks = niceTicks(lo - (hi - lo) * .08, hi + (hi - lo) * .08);
+  const y0 = Math.min(...ticks), y1 = Math.max(...ticks);
+  const px = i => pad.l + (months.length === 1 ? 0 : i / (months.length - 1) * (w - pad.l - pad.r));
+  const py = v => h - pad.b - (v - y0) / ((y1 - y0) || 1) * (h - pad.t - pad.b);
+
+  const grid = ticks.map(v => `<line x1="${pad.l}" y1="${py(v).toFixed(1)}" x2="${w - pad.r}" y2="${py(v).toFixed(1)}"
+      stroke="var(--line)" stroke-width="1"/>
+    <text x="${pad.l - 9}" y="${(py(v) + 4).toFixed(1)}" text-anchor="end" fill="var(--dim)" font-size="11">${dec(v, M.d)}</text>`).join('');
+
+  const every = Math.ceil(months.length / 12);
+  const xlab = months.map((m, i) => (i % every === 0 || i === months.length - 1)
+    ? `<text x="${px(i).toFixed(1)}" y="${h - 9}" text-anchor="middle" fill="var(--dim)" font-size="11">${mlabel(m)}</text>` : '').join('');
+
+  const lines = rows.map(r => {
+    const segs = []; let cur = [];
+    r.vals.forEach((v, i) => {
+      if(v == null){ if(cur.length) segs.push(cur); cur = []; }
+      else cur.push(`${px(i).toFixed(1)},${py(v).toFixed(1)}`);
+    });
+    if(cur.length) segs.push(cur);
+    const dash = r.dash ? ` stroke-dasharray="${r.dash}"` : '';
+    const path = segs.map(s => s.length > 1
+      ? `<polyline points="${s.join(' ')}" fill="none" stroke="${r.color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"${dash}/>`
+      : `<circle cx="${s[0].split(',')[0]}" cy="${s[0].split(',')[1]}" r="3" fill="${r.color}"/>`).join('');
+    const dots = months.length <= 30 ? r.vals.map((v, i) => v == null ? ''
+      : `<circle cx="${px(i).toFixed(1)}" cy="${py(v).toFixed(1)}" r="4" fill="${r.color}" stroke="var(--panel)" stroke-width="2"/>`).join('') : '';
+    let label = '';
+    if(direct){
+      const last = r.vals.reduce((acc, v, i) => v == null ? acc : i, -1);
+      if(last >= 0) label = `<text x="${w - pad.r + 8}" y="${(py(r.vals[last]) + 4).toFixed(1)}" fill="var(--text)" font-size="11.5">${esc(r.key)}</text>`;
+    }
+    return path + dots + label;
+  }).join('');
+
+  const legend = rows.length > 1
+    ? `<div class="slegend">${rows.map(r => `<span><svg width="20" height="8" aria-hidden="true"><line x1="0" y1="4" x2="20" y2="4"
+         stroke="${r.color}" stroke-width="3" stroke-linecap="round"${r.dash ? ` stroke-dasharray="${r.dash}"` : ''}/></svg>${
+         esc(r.key)} <span class="muted">· ${fmt(r.n)}</span></span>`).join('')}</div>` : '';
+
+  const hit = `<rect x="0" y="0" width="${w}" height="${h}" fill="transparent" id="trendHit"/>`;
+  const cross = `<line id="trendCross" x1="0" y1="${pad.t}" x2="0" y2="${h - pad.b}" stroke="var(--dim)" stroke-width="1" stroke-dasharray="3 3" style="display:none"/>`;
+  const html = `${legend}<div class="chartwrap" id="chartWrap">
+    <svg width="${w}" height="${h}" id="trendSvg" role="img" aria-label="${esc(M.t)} по месяцам">
+      ${grid}${xlab}
+      <line x1="${pad.l}" y1="${h - pad.b}" x2="${w - pad.r}" y2="${h - pad.b}" stroke="var(--line)" stroke-width="1"/>
+      ${cross}${lines}${hit}
+    </svg><div class="tipbox" id="trendTip"></div></div>`;
+  return {html, rows, px, geom: {pad, w, h}};
+}
+
+function bindTrendHover(ch, data, metric){
+  const svg = document.getElementById('trendSvg'); if(!svg) return;
+  const tip = document.getElementById('trendTip'), cross = document.getElementById('trendCross');
+  const wrap = document.getElementById('chartWrap'), M = TREND_METRICS[metric];
+  const months = data.months;
+  svg.onmouseleave = () => { tip.style.display = 'none'; cross.style.display = 'none'; };
+  svg.onmousemove = e => {
+    const box = svg.getBoundingClientRect();
+    const x = e.clientX - box.left;
+    let i = 0, best = 1e9;
+    months.forEach((m, j) => { const d = Math.abs(ch.px(j) - x); if(d < best){ best = d; i = j; } });
+    const rows = ch.rows.map(r => [r, r.vals[i]]).filter(p => p[1] != null || p[0].ns[i]);
+    cross.style.display = ''; cross.setAttribute('x1', ch.px(i)); cross.setAttribute('x2', ch.px(i));
+    tip.innerHTML = `<b>${mlabel(months[i])}</b>` + (rows.length
+      ? rows.map(([r]) => `<div class="tiprow"><i style="background:${r.color}"></i><em>${esc(r.key)}</em>
+          <span>${r.raw[i] == null ? '—' : dec(r.raw[i], M.d) + (metric === 'n' ? ' шт.' : ' ' + M.unit)}
+          <span class="muted">· ${fmt(r.ns[i])} лот.</span></span></div>`).join('')
+      : '<div class="tiprow"><em>мало данных</em></div>');
+    tip.style.display = 'block';
+    const tw = tip.offsetWidth;
+    tip.style.left = Math.max(0, Math.min(ch.px(i) + 14, wrap.clientWidth - tw - 2)) + 'px';
+    tip.style.top = Math.max(6, e.clientY - box.top - tip.offsetHeight - 12) + 'px';
+  };
+}
+
+function trendTable(data, metric){
+  const M = TREND_METRICS[metric], minN = data.min_n;
+  const idx = data.months.map((m, i) => i).reverse();
+  if(data.group === 'none'){
+    const s = data.series[0]; if(!s) return '';
+    const hasPpm = s.points.some(p => p.med_ppm != null);
+    const head = `<tr><th>Месяц</th><th>Выставлено</th>${hasPpm
+      ? '<th>Медиана EUR/m²</th><th>Δ к пред.</th><th>Средняя EUR/m²</th><th>p25–p75 EUR/m²</th>' : ''}
+      <th>Медиана цены</th>${hasPpm ? '<th>Медиана площади</th>' : '<th>Δ цены к пред.</th>'}</tr>`;
+    const body = idx.map(i => {
+      const p = s.points[i], prev = i > 0 ? s.points[i - 1] : null;
+      const ok = p && p.n >= minN;
+      const chg = key => (ok && prev && prev.n >= minN && prev[key] && p[key])
+        ? (p[key] - prev[key]) / prev[key] * 100 : null;
+      const ppmCells = `<td class="num">${ok ? fmt(p.med_ppm) : '<span class="muted">—</span>'}</td>
+        <td class="num">${pctHtml(chg('med_ppm'))}</td>
+        <td class="num">${ok ? fmt(p.avg_ppm) : '—'}</td>
+        <td class="num muted">${ok && p.p25_ppm ? fmt(p.p25_ppm) + '–' + fmt(p.p75_ppm) : '—'}</td>`;
+      return `<tr><td>${mlabel(p.m)}</td><td class="num">${fmt(p.n)}</td>
+        ${hasPpm ? ppmCells : ''}
+        <td class="num">${ok ? fmt(p.med_price) : '—'}</td>
+        <td class="num">${hasPpm ? (ok ? dec(p.med_area, 1) : '—') : pctHtml(chg('med_price'))}</td></tr>`;
+    }).join('');
+    return `<table class="data">${head}${body}</table>`;
+  }
+  const cols = data.series.filter(s => s.points.some((p, i) => tpoint(p, metric, minN) != null));
+  const head = `<tr><th>Месяц</th>${cols.map(s => `<th>${esc(s.key)}</th>`).join('')}<th>Всего</th></tr>`;
+  const body = idx.map(i => {
+    const total = data.series.reduce((sum, s) => sum + (s.points[i].n || 0), 0);
+    return `<tr><td>${mlabel(data.months[i])}</td>${cols.map(s => {
+      const v = tpoint(s.points[i], metric, minN);
+      return `<td class="num">${v == null ? '<span class="muted">—</span>' : dec(v, M.d)}</td>`;
+    }).join('')}<td class="num muted">${fmt(total)}</td></tr>`;
+  }).join('');
+  return `<table class="data">${head}${body}</table>`;
+}
+
+function trendKpis(total, metric){
+  const s = total.series[0];
+  if(!s) return '';
+  const M = TREND_METRICS[metric], minN = total.min_n;
+  const vals = s.points.map(p => tpoint(p, metric, minN));
+  const at = i => vals[i];
+  const last = vals.reduce((acc, v, i) => v == null ? acc : i, -1);
+  if(last < 0) return '';
+  const delta = back => {
+    const i = last - back;
+    return (i >= 0 && at(i) != null && at(last) != null) ? (at(last) - at(i)) / at(i) * 100 : null;
+  };
+  const sl = slope(vals);
+  const firstIdx = vals.findIndex(v => v != null);
+  const span = last - firstIdx;
+  const tile = (k, v, s2) => `<div class="kpi"><div class="k">${k}</div><div class="v">${v}</div><div class="s">${s2}</div></div>`;
+  return `<div class="kpis">
+    ${tile(`${M.t}, ${mlabel(total.months[last])}`, dec(at(last), M.d) + (metric === 'n' ? '' : ' ' + M.unit),
+           `лотов в месяце: ${fmt(s.points[last].n)}`)}
+    ${tile('за 3 месяца', pctHtml(delta(3)), delta(3) == null ? 'мало данных' : 'к ' + mlabel(total.months[last - 3]))}
+    ${tile('за 12 месяцев', pctHtml(delta(12)), delta(12) == null ? 'мало данных' : 'к ' + mlabel(total.months[last - 12]))}
+    ${tile('средний темп', sl == null ? '—' : pctHtml(sl), 'в месяц, по всему периоду')}
+    ${tile('весь период', pctHtml(delta(span)), `${mlabel(total.months[firstIdx])} → ${mlabel(total.months[last])}`)}
+  </div>`;
+}
+
+function trendQuery(group){
+  const q = query();
+  ['sort','dir','limit','offset'].forEach(k => q.delete(k));
+  q.set('group', group);
+  q.set('months', state.trend.months);
+  q.set('min_n', state.trend.min_n);
+  q.set('gone', state.trend.gone);
+  return q;
+}
+
+function trendControls(){
+  const t = state.trend;
+  const opt = (arr, cur) => arr.map(([v, txt]) => `<option value="${v}" ${v == cur ? 'selected' : ''}>${txt}</option>`).join('');
+  return `<div class="ctlbar">
+    <div class="ctl"><label>показатель</label><select id="t_metric">
+      ${opt(Object.entries(TREND_METRICS).map(([k, m]) => [k, m.t]), t.metric)}</select></div>
+    <div class="ctl"><label>разрез</label><select id="t_group">${opt(TREND_GROUPS_UI, t.group)}</select></div>
+    <div class="ctl"><label>период</label><select id="t_months">
+      ${opt([[12,'12 месяцев'],[24,'24 месяца'],[36,'3 года'],[60,'5 лет'],[120,'всё, что есть']], t.months)}</select></div>
+    <div class="ctl"><label>сглаживание</label><select id="t_smooth">
+      ${opt([[1,'нет — как есть'],[3,'3 месяца'],[5,'5 месяцев']], t.smooth)}</select></div>
+    <div class="ctl"><label>мин. лотов в месяце</label><input type="number" id="t_min_n" value="${t.min_n}" style="width:96px"></div>
+    <div class="ctl"><label>&nbsp;</label><label class="check" style="margin:0"><input type="checkbox" id="t_gone"
+      ${t.gone === 'both' ? 'checked' : ''}> учитывать снятые лоты</label></div>
+  </div>`;
+}
+
+async function loadTrends(){
+  syncHash();
+  const view = $('#trendsView');
+  view.innerHTML = trendControls() + '<div class="empty">считаю…</div>';
+  bindTrendControls();
+  const t = state.trend;
+  const [data, total] = await Promise.all([
+    fetch('/api/trends?' + trendQuery(t.group)).then(r => r.json()),
+    t.group === 'none' ? null : fetch('/api/trends?' + trendQuery('none')).then(r => r.json()),
+  ]);
+  t.data = data;
+  const noPpm = t.metric.endsWith('_ppm') && !data.series.some(s => s.points.some(p => p.med_ppm != null));
+  if(noPpm){ t.metric = t.metric === 'avg_ppm' ? 'avg_price' : 'med_price'; return loadTrends(); }
+  if(data.error){ view.innerHTML = trendControls() + `<div class="empty">${esc(data.error)}</div>`; bindTrendControls(); return; }
+  if(!data.months.length){
+    view.innerHTML = trendControls() + '<div class="empty">по этим фильтрам объявлений с датой публикации нет</div>';
+    bindTrendControls(); return;
+  }
+  const M = TREND_METRICS[t.metric];
+  const width = (view.clientWidth || 900) - 30;
+  const ch = trendChart(data, t.metric, width, t.smooth);
+  const groupName = (TREND_GROUPS_UI.find(g => g[0] === t.group) || [])[1];
+  const hidden = data.hidden ? `<div class="muted" style="margin-top:8px">Показаны 8 крупнейших групп; ещё ${data.hidden}
+      (${fmt(data.hidden_n)} лотов) свёрнуты — сузьте выборку фильтрами слева.</div>` : '';
+
+  view.innerHTML = trendControls()
+    + trendKpis(total || data, t.metric)
+    + `<div class="panel"><h4>${esc(M.t)} по месяцу публикации · ${esc(groupName)}</h4>
+         ${ch.html}${hidden}
+         <div class="muted" style="margin-top:10px">Месяц — это месяц публикации объявления, поэтому в старых месяцах
+         остаются лоты, которые долго не продавались${t.gone === 'both' ? ' (снятые с продажи учтены)' : ' (снятые с продажи не учтены — включите галочку выше)'}.
+         Точки, где в месяце меньше ${data.min_n} лотов, не рисуются.${t.metric.endsWith('_ppm') ? ' Цена за m² берётся из карточки, экстремумы вне 100–25 000 EUR/m² отброшены.' : ''}${
+         t.smooth > 1 ? ` Линия сглажена скользящим средним по ${t.smooth} месяцам — в подсказке и таблице цифры сырые.` : ''}</div>
+       </div>`
+    + `<div class="panel" style="margin-top:14px"><h4>Таблица · ${esc(M.t)}</h4>
+         <div class="scroll-x">${trendTable(data, t.metric)}</div></div>`;
+  bindTrendControls();
+  if(ch.px) bindTrendHover(ch, data, t.metric);
+}
+
+function bindTrendControls(){
+  const t = state.trend;
+  const set = (id, key, cast) => { const el = $('#' + id); if(el) el.onchange = () => { t[key] = cast(el); loadTrends(); }; };
+  set('t_metric', 'metric', el => el.value);
+  set('t_group', 'group', el => el.value);
+  set('t_months', 'months', el => +el.value);
+  set('t_smooth', 'smooth', el => +el.value);
+  set('t_min_n', 'min_n', el => Math.max(1, +el.value || 1));
+  set('t_gone', 'gone', el => el.checked ? 'both' : '0');
+}
+
+let trendResizeTimer = null;
+addEventListener('resize', () => {
+  if(state.tab !== 'trends') return;
+  clearTimeout(trendResizeTimer);
+  trendResizeTimer = setTimeout(loadTrends, 250);
+});
+
+$('#apply').onclick = () => { state.offset = 0; refresh(); };
+$('#reset').onclick = () => {
+  document.querySelectorAll('aside input').forEach(i => { i.type === 'checkbox' ? i.checked = false : i.value = ''; });
+  state.rooms.clear(); state.housing.clear(); state.districts.clear(); state.author = '';
+  loadMeta();
+};
+$('#sort').onchange = $('#dir').onchange = () => { state.sortTouched = true; state.offset = 0; load(); };
+$('#search').onkeydown = e => { if(e.key === 'Enter'){ state.offset = 0; refresh(); } };
+document.querySelectorAll('aside input').forEach(i =>
+  i.addEventListener('keydown', e => { if(e.key === 'Enter'){ state.offset = 0; refresh(); } }));
+
+loadMeta();
+</script>
+</body>
+</html>
