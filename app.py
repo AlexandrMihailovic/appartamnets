@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import sqlite3
 import threading
 import webbrowser
@@ -541,6 +542,9 @@ def api_trends(conn, params) -> dict:
 
 PRIVATE_FIELDS = ("phones", "owner_login", "owner_id", "owner_registered", "owner_verified")
 
+PRIVATE_FEATURES = ("Контакты", "Агентство")
+PHONE_RE = re.compile(r"(?<!\d)(?:\+?373[\s\-.()]*)?0?[\s\-.()]*[67]\d(?:[\s\-.()]*\d){6}(?!\d)")
+PHONE_MASK = "[номер скрыт]"
 
 def strip_private(payload):
     items = payload.get("items") if isinstance(payload, dict) else None
@@ -550,6 +554,15 @@ def strip_private(payload):
         for field in PRIVATE_FIELDS:
             if field in item:
                 item[field] = None
+        if isinstance(item.get("description"), str):
+            item["description"] = PHONE_RE.sub(PHONE_MASK, item["description"])
+        features = item.get("features")
+        if isinstance(features, dict):
+            for field in PRIVATE_FEATURES:
+                features.pop(field, None)
+            text = features.get("Текст объявления")
+            if isinstance(text, str):
+                features["Текст объявления"] = PHONE_RE.sub(PHONE_MASK, text)
     return payload
 
 
