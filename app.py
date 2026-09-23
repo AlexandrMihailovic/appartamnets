@@ -10,8 +10,10 @@ import re
 import time
 import sqlite3
 import threading
+import traceback
 import urllib.request
 import webbrowser
+from datetime import datetime
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, quote, urlparse
 
@@ -700,6 +702,60 @@ def api_contact(conn, payload: dict, ip: str) -> dict:
     return {"ok": True}
 
 
+MONTHS_RU = ("января", "февраля", "марта", "апреля", "мая", "июня",
+             "июля", "августа", "сентября", "октября", "ноября", "декабря")
+SUMMARY_TTL = 600
+_summary_cache = {"at": 0.0, "html": ""}
+
+
+def money(value) -> str:
+    return f"{round(value):,}".replace(",", " ") if value else "—"
+
+
+def summary_html(conn) -> str:
+    now = time.time()
+    if _summary_cache["html"] and now - _summary_cache["at"] < SUMMARY_TTL:
+        return _summary_cache["html"]
+
+    stats = api_stats(conn, {"profile": ["apartments"]})
+    districts = [r for r in stats["by_district"] if r["avg_ppm"]][:12]
+    rooms = [r for r in stats["by_rooms"] if r["rooms"] is not None and r["n"] >= 5]
+    total = conn.execute(
+        "SELECT COUNT(*) c FROM ads WHERE profile = 'apartments' AND gone_at IS NULL").fetchone()["c"]
+    garages = conn.execute(
+        "SELECT COUNT(*) c FROM ads WHERE profile = 'garages' AND gone_at IS NULL").fetchone()["c"]
+    today = datetime.now()
+    date_text = f"{today.day} {MONTHS_RU[today.month - 1]} {today.year}"
+
+    rows_d = "".join(
+        f"<tr><td>{r['district']}</td><td>{money(r['avg_ppm'])} EUR</td>"
+        f"<td>{money(r['avg_price'])} EUR</td><td>{r['n']}</td></tr>" for r in districts)
+    rows_r = "".join(
+        f"<tr><td>{'студия' if r['rooms'] == 0 else str(r['rooms']) + '-комнатные'}</td>"
+        f"<td>{money(r['avg_ppm'])} EUR</td><td>{money(r['avg_area'])} m²</td>"
+        f"<td>{money(r['avg_price'])} EUR</td><td>{r['n']}</td></tr>" for r in rooms)
+
+    html = f"""<section class="seo">
+  <h2>Цены на недвижимость в Кишинёве на {date_text}</h2>
+  <p>В базе {money(total)} действующих объявлений о продаже квартир и {money(garages)} объявлений
+  о продаже гаражей и парковочных мест в Кишинёве. Данные обновляются каждые полчаса, по каждому
+  объявлению сохраняется история изменения цены, поэтому видно, кто из продавцов снижает цену
+  и насколько.</p>
+  <h3>Средняя цена квадратного метра по секторам Кишинёва</h3>
+  <table class="data"><tr><th>Сектор</th><th>Цена за m²</th><th>Средняя цена лота</th><th>Объявлений</th></tr>
+  {rows_d}</table>
+  <h3>Цены по количеству комнат</h3>
+  <table class="data"><tr><th>Квартиры</th><th>Цена за m²</th><th>Средняя площадь</th><th>Средняя цена</th><th>Объявлений</th></tr>
+  {rows_r}</table>
+  <p>Цифры посчитаны по действующим объявлениям с карты 999.md: вторичное жильё и новостройки
+  вместе, без учёта снятых с продажи лотов. Помесячная динамика цены за квадратный метр,
+  фильтры по площади, этажу и жилому фонду, карта и отбор недооценённых предложений —
+  во вкладках выше.</p>
+</section>"""
+    _summary_cache.update(at=now, html=html)
+    return html
+
+
 def api_flag(conn, payload: dict) -> dict:
     ad_id = str(payload.get("id") or "")
     if not ad_id:
@@ -737,7 +793,8 @@ class Handler(BaseHTTPRequestHandler):
 
     def send_page(self):
         with open(INDEX, encoding="utf-8") as fh:
-            page = fh.read().replace("{{ORIGIN}}", self.origin())
+            page = (fh.read().replace("{{ORIGIN}}", self.origin())
+                            .replace("{{SUMMARY}}", summary_html(self.conn)))
         self.send_bytes(page.encode(), "text/html; charset=utf-8")
 
     def send_bytes(self, body: bytes, ctype: str, status=200):
@@ -788,8 +845,9 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_json(strip_private(api_ad(self.conn, route.rsplit("/", 1)[-1])))
             else:
                 self.send_json({"error": "нет такого адреса"}, 404)
-        except Exception as exc:
-            self.send_json({"error": f"{type(exc).__name__}: {exc}"}, 500)
+        except Exception:
+            traceback.print_exc()
+            self.send_json({"error": "внутренняя ошибка"}, 500)
 
     @property
     def client_ip(self) -> str:
@@ -814,8 +872,9 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_json(api_contact(self.conn, payload, self.client_ip))
             else:
                 self.send_json({"error": "нет такого адреса"}, 404)
-        except Exception as exc:
-            self.send_json({"error": f"{type(exc).__name__}: {exc}"}, 500)
+        except Exception:
+            traceback.print_exc()
+            self.send_json({"error": "внутренняя ошибка"}, 500)
 
 
 def main() -> int:
