@@ -16,6 +16,8 @@ from profiles import PROFILES
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 INDEX = os.path.join(HERE, "static", "index.html")
+FAVICON = os.path.join(HERE, "static", "favicon.ico")
+ROBOTS = b"User-agent: *\nAllow: /\n"
 
 PPM = "COALESCE(d.price_per_m2, CASE WHEN d.area > 0 THEN a.price / d.area END)"
 DROP_ABS = "CASE WHEN a.prev_price IS NOT NULL THEN a.price - a.prev_price END"
@@ -596,13 +598,20 @@ class Handler(BaseHTTPRequestHandler):
     def log_message(self, *args):
         pass
 
-    def send_json(self, payload, status=200):
-        body = json.dumps(payload, ensure_ascii=False).encode()
+    def send_bytes(self, body: bytes, ctype: str, status=200):
         self.send_response(status)
-        self.send_header("content-type", "application/json; charset=utf-8")
+        self.send_header("content-type", ctype)
         self.send_header("content-length", str(len(body)))
         self.end_headers()
         self.wfile.write(body)
+
+    def send_file(self, path: str, ctype: str):
+        with open(path, "rb") as fh:
+            self.send_bytes(fh.read(), ctype)
+
+    def send_json(self, payload, status=200):
+        self.send_bytes(json.dumps(payload, ensure_ascii=False).encode(),
+                        "application/json; charset=utf-8", status)
 
     def do_GET(self):
         parsed = urlparse(self.path)
@@ -610,13 +619,11 @@ class Handler(BaseHTTPRequestHandler):
         params = parse_qs(parsed.query)
         try:
             if route in ("/", "/index.html"):
-                with open(INDEX, "rb") as fh:
-                    body = fh.read()
-                self.send_response(200)
-                self.send_header("content-type", "text/html; charset=utf-8")
-                self.send_header("content-length", str(len(body)))
-                self.end_headers()
-                self.wfile.write(body)
+                self.send_file(INDEX, "text/html; charset=utf-8")
+            elif route == "/favicon.ico":
+                self.send_file(FAVICON, "image/x-icon")
+            elif route == "/robots.txt":
+                self.send_bytes(ROBOTS, "text/plain; charset=utf-8")
             elif route == "/api/meta":
                 self.send_json(api_meta(self.conn))
             elif route == "/api/ads":
