@@ -796,13 +796,7 @@ async function loadStats(){
     <div class="panel" style="margin-top:14px"><h4>Изменения цены по дням</h4>
       ${bars(s.changes, 'day', 'n', 'шт.')}
       <div class="muted" style="margin-top:8px">Первый прогон записывает стартовую цену всем лотам — поэтому в первый день столбик равен размеру базы.</div>
-    </div>
-    <div class="panel" style="margin-top:14px"><h4>Прогоны сборщика</h4>
-      <table class="data"><tr><th>Когда</th><th>Профиль</th><th>Найдено</th><th>Новых</th><th>Ушло</th><th>↓</th><th>↑</th></tr>
-      ${(state.meta.runs||[]).map(r => `<tr><td>${esc(r.finished)}</td><td>${esc(r.profile)}</td>
-        <td>${fmt(r.total)}</td><td>${fmt(r.added)}</td><td>${fmt(r.gone)}</td>
-        <td class="down">${fmt(r.price_down)}</td><td class="up">${fmt(r.price_up)}</td></tr>`).join('')}
-      </table></div>`;
+    </div>`;
 }
 
 const SERIES_COLORS = ['#3987e5','#d95926','#199e70','#c98500','#d55181','#008300','#9085e9','#e66767'];
