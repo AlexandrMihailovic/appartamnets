@@ -30,6 +30,7 @@
  "url":"{{ORIGIN}}/","inLanguage":"ru",
  "description":"Цены на квартиры, гаражи и парковки в Кишинёве, история изменения цен, статистика по секторам и помесячная динамика стоимости квадратного метра."}
 </script>
+<script>try { const t = localStorage.getItem('theme'); if(t === 'light' || t === 'dark') document.documentElement.dataset.theme = t; } catch(e){}</script>
 <style>
   :root{
     color-scheme:light dark;
@@ -39,13 +40,21 @@
     --scroll:#343a47; --map-bg:#0b0d12; --shadow:#000a; --radius:10px;
   }
   @media (prefers-color-scheme: light){
-    :root{
+    :root:not([data-theme="dark"]){
       --bg:#f2f4f7; --panel:#ffffff; --panel2:#eef1f5; --line:#dce1e8; --hover:#b7c0ce;
       --text:#161a21; --dim:#5b6475; --accent:#1c6de0; --on-accent:#ffffff;
       --good:#0b8a56; --bad:#cf3434; --warn:#b06a00; --terms:#485062;
       --scroll:#c4cbd5; --map-bg:#e8ebef; --shadow:#1a20302e;
     }
   }
+  :root[data-theme="light"]{
+    color-scheme:light;
+    --bg:#f2f4f7; --panel:#ffffff; --panel2:#eef1f5; --line:#dce1e8; --hover:#b7c0ce;
+    --text:#161a21; --dim:#5b6475; --accent:#1c6de0; --on-accent:#ffffff;
+    --good:#0b8a56; --bad:#cf3434; --warn:#b06a00; --terms:#485062;
+    --scroll:#c4cbd5; --map-bg:#e8ebef; --shadow:#1a20302e;
+  }
+  :root[data-theme="dark"]{color-scheme:dark}
   *{box-sizing:border-box}
   *{scrollbar-width:thin;scrollbar-color:var(--scroll) transparent}
   body{margin:0;background:var(--bg);color:var(--text);
@@ -271,6 +280,7 @@
     #filtersBtn{display:block;order:8}
     #layout{display:none}
     #contactBtn{order:11}
+    #themeBtn{order:8}
 
     main{padding:10px;gap:0}
     aside{position:fixed;left:0;top:0;bottom:0;width:min(320px,88vw);overflow:auto;
@@ -335,6 +345,7 @@
   <div class="grow"></div>
   <span class="muted" id="dbinfo"></span>
   <button class="btn" id="filtersBtn">Фильтры</button>
+  <button class="btn" id="themeBtn"></button>
   <button class="btn" id="contactBtn">Связаться</button>
 </header>
 
@@ -1056,7 +1067,7 @@ function lbLoupe(e){
 })();
 
 const MAP_COLORS = ['#3ddc97','#9ede4a','#ffc55c','#ff9f43','#ff6b6b'];  // дёшево → дорого
-let map, mapLayer, mapBounds = null, mapKey = '';
+let map, mapTiles, mapLayer, mapBounds = null, mapKey = '';
 
 function loadLeaflet(){
   if(window._leaflet) return window._leaflet;
@@ -1146,7 +1157,8 @@ async function loadMap(){
     const dark = canvas('Dark'), grey = canvas('Light');
     const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
       {maxZoom: 19, attribution: '© OpenStreetMap'});
-    (matchMedia('(prefers-color-scheme: light)').matches ? grey : dark).addTo(map);
+    mapTiles = {grey, dark, osm};
+    (isLight() ? grey : dark).addTo(map);
     L.control.layers({'светлая': grey, 'тёмная': dark, 'обычная': osm}, null, {position: 'topright'}).addTo(map);
   }
   if(mapLayer) mapLayer.remove();
@@ -1616,6 +1628,28 @@ async function openContact(){
 }
 function closeContact(){ $('#contact').classList.remove('open'); }
 $('#contactBtn').onclick = openContact;
+const THEME_KEY = 'theme';
+const isLight = () => document.documentElement.dataset.theme
+  ? document.documentElement.dataset.theme === 'light'
+  : matchMedia('(prefers-color-scheme: light)').matches;
+function paintThemeBtn(){
+  const light = isLight();
+  $('#themeBtn').textContent = light ? '🌙' : '☀';
+  $('#themeBtn').title = light ? 'тёмная тема' : 'светлая тема';
+  $('#themeBtn').setAttribute('aria-label', $('#themeBtn').title);
+}
+function setTheme(t){
+  document.documentElement.dataset.theme = t;
+  try { localStorage.setItem(THEME_KEY, t); } catch(e){}
+  paintThemeBtn();
+  if(map && mapTiles && !map.hasLayer(mapTiles.osm)){
+    const [on, off] = t === 'light' ? [mapTiles.grey, mapTiles.dark] : [mapTiles.dark, mapTiles.grey];
+    map.removeLayer(off); on.addTo(map);
+  }
+}
+$('#themeBtn').onclick = () => setTheme(isLight() ? 'dark' : 'light');
+matchMedia('(prefers-color-scheme: light)').addEventListener('change', paintThemeBtn);
+paintThemeBtn();
 $('#contactClose').onclick = closeContact;
 $('#contact').onclick = e => { if(e.target.id === 'contact') closeContact(); };
 
