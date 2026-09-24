@@ -14,6 +14,7 @@ import traceback
 import urllib.request
 import webbrowser
 from datetime import datetime
+from html import escape
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, quote, urlparse
 
@@ -25,11 +26,6 @@ INDEX = os.path.join(HERE, "static", "index.html")
 FAVICON = os.path.join(HERE, "static", "favicon.ico")
 OG_IMAGE = os.path.join(HERE, "static", "og.png")
 ROBOTS = "User-agent: *\nAllow: /\n\n"
-SITEMAP = """<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>{origin}/</loc><lastmod>{today}</lastmod><changefreq>hourly</changefreq><priority>1.0</priority></url>
-</urlset>
-"""
 
 PPM = "COALESCE(d.price_per_m2, CASE WHEN d.area > 0 THEN a.price / d.area END)"
 DROP_ABS = "CASE WHEN a.prev_price IS NOT NULL THEN a.price - a.prev_price END"
@@ -704,56 +700,225 @@ def api_contact(conn, payload: dict, ip: str) -> dict:
 
 MONTHS_RU = ("января", "февраля", "марта", "апреля", "мая", "июня",
              "июля", "августа", "сентября", "октября", "ноября", "декабря")
+MONTHS_NOM = ("январь", "февраль", "март", "апрель", "май", "июнь",
+              "июль", "август", "сентябрь", "октябрь", "ноябрь", "декабрь")
 SUMMARY_TTL = 600
-_summary_cache = {"at": 0.0, "html": ""}
+_page_cache: dict = {}
+
+SECTORS = {"Ботаника": "botanica", "Центр": "centru", "Чокана": "ciocana", "Буюканы": "buiucani",
+           "Рышкановка": "riscani", "Телецентр": "telecentru", "Старая Почта": "posta-veche",
+           "Скулянка": "sculeanca", "Аэропорт": "aeroport", "Окраина": "okraina"}
+SECTOR_BY_SLUG = {slug: name for name, slug in SECTORS.items()}
+SECTIONS = (("/", "Квартиры"), ("/garages", "Гаражи и парковки"),
+            ("/stats", "Статистика"), ("/trends", "Динамика цен"))
 
 
 def money(value) -> str:
-    return f"{round(value):,}".replace(",", " ") if value else "—"
+    return f"{round(value):,}".replace(",", " ") if value else "—"
 
 
-def summary_html(conn) -> str:
-    now = time.time()
-    if _summary_cache["html"] and now - _summary_cache["at"] < SUMMARY_TTL:
-        return _summary_cache["html"]
+def rooms_label(rooms: int) -> str:
+    return "студии" if rooms == 0 else f"{rooms}-комнатные"
 
-    stats = api_stats(conn, {"profile": ["apartments"]})
-    districts = [r for r in stats["by_district"] if r["avg_ppm"]][:12]
-    rooms = [r for r in stats["by_rooms"] if r["rooms"] is not None and r["n"] >= 5]
-    total = conn.execute(
-        "SELECT COUNT(*) c FROM ads WHERE profile = 'apartments' AND gone_at IS NULL").fetchone()["c"]
-    garages = conn.execute(
-        "SELECT COUNT(*) c FROM ads WHERE profile = 'garages' AND gone_at IS NULL").fetchone()["c"]
+
+def sector_link(name: str) -> str:
+    slug = SECTORS.get(name)
+    return f'<a href="/sector/{slug}">{escape(name)}</a>' if slug else escape(name)
+
+
+def date_text() -> str:
     today = datetime.now()
-    date_text = f"{today.day} {MONTHS_RU[today.month - 1]} {today.year}"
+    return f"{today.day} {MONTHS_RU[today.month - 1]} {today.year}"
 
-    rows_d = "".join(
-        f"<tr><td>{r['district']}</td><td>{money(r['avg_ppm'])} EUR</td>"
-        f"<td>{money(r['avg_price'])} EUR</td><td>{r['n']}</td></tr>" for r in districts)
-    rows_r = "".join(
-        f"<tr><td>{'студия' if r['rooms'] == 0 else str(r['rooms']) + '-комнатные'}</td>"
-        f"<td>{money(r['avg_ppm'])} EUR</td><td>{money(r['avg_area'])} m²</td>"
-        f"<td>{money(r['avg_price'])} EUR</td><td>{r['n']}</td></tr>" for r in rooms)
 
-    html = f"""<section class="seo">
-  <h2>Цены на недвижимость в Кишинёве на {date_text}</h2>
-  <p>В базе {money(total)} действующих объявлений о продаже квартир и {money(garages)} объявлений
-  о продаже гаражей и парковочных мест в Кишинёве. Данные обновляются каждые полчаса, по каждому
-  объявлению сохраняется история изменения цены, поэтому видно, кто из продавцов снижает цену
-  и насколько.</p>
+def links_html(conn, path: str) -> str:
+    def link(href, text):
+        return f"<b>{escape(text)}</b>" if href == path else f'<a href="{href}">{escape(text)}</a>'
+    names = [r["district"] for r in conn.execute(
+        """SELECT d.district, COUNT(*) n FROM ads a JOIN ad_details d ON d.id = a.id
+           WHERE a.profile = 'apartments' AND a.gone_at IS NULL AND d.district <> ''
+           GROUP BY d.district ORDER BY n DESC""") if r["district"] in SECTORS]
+    return f"""<nav class="links">
+  <h3>Разделы</h3>
+  <p>{' · '.join(link(href, text) for href, text in SECTIONS)}</p>
+  <h3>Квартиры по секторам Кишинёва</h3>
+  <p>{' · '.join(link('/sector/' + SECTORS[n], n) for n in names)}</p>
+</nav>"""
+
+
+def rooms_table(rows) -> str:
+    body = "".join(
+        f"<tr><td>{rooms_label(r['rooms'])}</td><td>{money(r['avg_ppm'])} €</td>"
+        f"<td>{money(r['avg_area'])} m²</td><td>{money(r['avg_price'])} €</td><td>{r['n']}</td></tr>"
+        for r in rows)
+    return ("<table class=\"data\"><tr><th>Квартиры</th><th>Цена за m²</th><th>Средняя площадь</th>"
+            f"<th>Средняя цена</th><th>Объявлений</th></tr>\n  {body}</table>")
+
+
+def trend_table(conn, params) -> str:
+    data = api_trends(conn, {"profile": ["apartments"], "gone": ["both"], "months": ["12"],
+                             "min_n": ["5"], **params})
+    points = [p for p in (data["series"][0]["points"] if data["series"] else [])
+              if p["n"] >= 5 and p.get("med_ppm")]
+    if not points:
+        return ""
+    body = "".join(
+        f"<tr><td>{MONTHS_NOM[int(p['m'][5:]) - 1]} {p['m'][:4]}</td><td>{money(p['med_ppm'])} €</td>"
+        f"<td>{money(p['med_price'])} €</td><td>{p['n']}</td></tr>" for p in points)
+    return ("<table class=\"data\"><tr><th>Месяц</th><th>Медиана за m²</th><th>Медиана цены</th>"
+            f"<th>Объявлений</th></tr>\n  {body}</table>")
+
+
+def district_rows(stats) -> str:
+    return "".join(
+        f"<tr><td>{sector_link(r['district'])}</td><td>{money(r['avg_ppm'])} €</td>"
+        f"<td>{money(r['avg_price'])} €</td><td>{r['n']}</td></tr>"
+        for r in stats["by_district"] if r["avg_ppm"])
+
+
+def active_count(conn, profile: str) -> int:
+    return conn.execute("SELECT COUNT(*) c FROM ads WHERE profile = ? AND gone_at IS NULL",
+                        (profile,)).fetchone()["c"]
+
+
+def home_page(conn) -> dict:
+    stats = api_stats(conn, {"profile": ["apartments"]})
+    rooms = [r for r in stats["by_rooms"] if r["rooms"] is not None and r["n"] >= 5]
+    body = f"""<h2>Цены на недвижимость в Кишинёве на {date_text()}</h2>
+  <p>В базе {money(active_count(conn, 'apartments'))} действующих объявлений о продаже квартир
+  и {money(active_count(conn, 'garages'))} объявлений о продаже гаражей и парковочных мест
+  в Кишинёве. Данные обновляются каждые полчаса, по каждому объявлению сохраняется история
+  изменения цены, поэтому видно, кто из продавцов снижает цену и насколько.</p>
   <h3>Средняя цена квадратного метра по секторам Кишинёва</h3>
   <table class="data"><tr><th>Сектор</th><th>Цена за m²</th><th>Средняя цена лота</th><th>Объявлений</th></tr>
-  {rows_d}</table>
+  {district_rows(stats)}</table>
   <h3>Цены по количеству комнат</h3>
-  <table class="data"><tr><th>Квартиры</th><th>Цена за m²</th><th>Средняя площадь</th><th>Средняя цена</th><th>Объявлений</th></tr>
-  {rows_r}</table>
+  {rooms_table(rooms)}
   <p>Цифры посчитаны по действующим объявлениям с карты 999.md: вторичное жильё и новостройки
   вместе, без учёта снятых с продажи лотов. Помесячная динамика цены за квадратный метр,
   фильтры по площади, этажу и жилому фонду, карта и отбор недооценённых предложений —
-  во вкладках выше.</p>
-</section>"""
-    _summary_cache.update(at=now, html=html)
-    return html
+  во вкладках выше.</p>"""
+    return {"title": "Цены на квартиры в Кишинёве — анализ рынка недвижимости",
+            "description": "Цены на квартиры, гаражи и парковки в Кишинёве: история снижения цен, "
+                           "статистика по секторам и динамика цены за m² по месяцам.",
+            "h1": "Недвижимость Кишинёва: цены, статистика и динамика рынка",
+            "init": {"profile": "apartments", "tab": "new"}, "body": body}
+
+
+def garages_page(conn) -> dict:
+    stats = api_stats(conn, {"profile": ["garages"]})
+    total = active_count(conn, "garages")
+    rows = "".join(f"<tr><td>{escape(r['district'])}</td><td>{money(r['avg_price'])} €</td><td>{r['n']}</td></tr>"
+                   for r in sorted(stats["by_district"], key=lambda r: -(r["avg_price"] or 0)))
+    body = f"""<h2>Цены на гаражи и парковки в Кишинёве на {date_text()}</h2>
+  <p>В базе {money(total)} действующих объявлений о продаже гаражей и парковочных мест
+  в Кишинёве, от кирпичных боксов до мест в подземных паркингах новостроек. По каждому
+  объявлению хранится история цены: видно, какие гаражи подешевели и на сколько.</p>
+  <h3>Средняя цена гаража по секторам</h3>
+  <table class="data"><tr><th>Сектор</th><th>Средняя цена</th><th>Объявлений</th></tr>
+  {rows}</table>"""
+    return {"title": "Гаражи и парковки в Кишинёве — цены и объявления",
+            "description": f"{money(total)} объявлений о продаже гаражей и парковочных мест в Кишинёве: "
+                           "цены по секторам, новые объявления и снижения цен.",
+            "h1": "Гаражи и парковочные места в Кишинёве: цены и объявления",
+            "init": {"profile": "garages", "tab": "new"}, "body": body}
+
+
+def stats_page(conn) -> dict:
+    stats = api_stats(conn, {"profile": ["apartments"]})
+    rooms = [r for r in stats["by_rooms"] if r["rooms"] is not None and r["n"] >= 5]
+    body = f"""<h2>Статистика цен на квартиры в Кишинёве на {date_text()}</h2>
+  <p>Сводка по {money(active_count(conn, 'apartments'))} действующим объявлениям о продаже квартир:
+  в каких секторах квадратный метр дороже и сколько в среднем стоят квартиры по числу комнат.</p>
+  <h3>Средняя цена квадратного метра по секторам</h3>
+  <table class="data"><tr><th>Сектор</th><th>Цена за m²</th><th>Средняя цена</th><th>Объявлений</th></tr>
+  {district_rows(stats)}</table>
+  <h3>Цены по количеству комнат</h3>
+  {rooms_table(rooms)}"""
+    return {"title": "Статистика цен на квартиры в Кишинёве по секторам",
+            "description": "Средняя цена квадратного метра и квартиры по секторам Кишинёва "
+                           "и по числу комнат, распределение цен и активность продавцов.",
+            "h1": "Статистика цен на квартиры в Кишинёве",
+            "init": {"profile": "apartments", "tab": "stats"}, "body": body}
+
+
+def trends_page(conn) -> dict:
+    body = f"""<h2>Как менялась цена квадратного метра в Кишинёве</h2>
+  <p>Медиана цены за m² по месяцу публикации объявления, за последние двенадцать месяцев.
+  В расчёт идут и действующие, и уже снятые с продажи квартиры, поэтому видно, по каким ценам
+  рынок выставлял жильё в каждом месяце. На графике выше тренд можно разложить по секторам,
+  числу комнат и жилому фонду.</p>
+  {trend_table(conn, {})}"""
+    return {"title": "Динамика цен на квартиры в Кишинёве по месяцам",
+            "description": "Как меняется цена квадратного метра в Кишинёве: медиана и средняя "
+                           "по месяцам, в разрезе секторов, комнат и жилого фонда.",
+            "h1": "Динамика цен на квартиры в Кишинёве",
+            "init": {"profile": "apartments", "tab": "trends"}, "body": body}
+
+
+def sector_page(conn, name: str) -> dict:
+    where = "a.profile = 'apartments' AND a.gone_at IS NULL AND d.district = ?"
+    head = conn.execute(
+        f"""SELECT COUNT(*) n, ROUND(AVG({PPM})) avg_ppm, ROUND(AVG(a.price)) avg_price,
+                   SUM(CASE WHEN ({DROP_ABS}) < 0 THEN 1 ELSE 0 END) down
+            FROM ads a JOIN ad_details d ON d.id = a.id WHERE {where}""", (name,)).fetchone()
+    rooms = [dict(r) for r in conn.execute(
+        f"""SELECT d.rooms_n AS rooms, COUNT(*) AS n, ROUND(AVG(a.price)) AS avg_price,
+                   ROUND(AVG({PPM})) AS avg_ppm, ROUND(AVG(d.area), 1) AS avg_area
+            FROM ads a JOIN ad_details d ON d.id = a.id
+            WHERE {where} AND d.rooms_n IS NOT NULL
+            GROUP BY d.rooms_n HAVING n >= 3 ORDER BY d.rooms_n""", (name,))]
+    trend = trend_table(conn, {"districts": [name]})
+    title = escape(name)
+    body = f"""<h2>Цены на квартиры в секторе {title} на {date_text()}</h2>
+  <p>В секторе {title} сейчас {money(head['n'])} действующих объявлений о продаже квартир.
+  Средняя цена квадратного метра — {money(head['avg_ppm'])} €, средняя цена квартиры —
+  {money(head['avg_price'])} €. Снизили цену с момента публикации: {money(head['down']) if head['down'] else 'ни одного'}.</p>
+  <h3>Цены по количеству комнат в секторе {title}</h3>
+  {rooms_table(rooms)}
+  {f'<h3>Медиана цены за m² в секторе {title} по месяцам</h3>' + chr(10) + '  ' + trend if trend else ''}"""
+    return {"title": f"Квартиры в секторе {name}, Кишинёв — цены за m²",
+            "description": f"Квартиры в секторе {name} (Кишинёв): {money(head['n'])} объявлений, "
+                           f"средняя цена {money(head['avg_ppm'])} € за m², цены по числу комнат "
+                           "и динамика по месяцам.",
+            "h1": f"Квартиры в секторе {name}, Кишинёв: цены и объявления",
+            "init": {"profile": "apartments", "tab": "all", "district": name}, "body": body}
+
+
+def page_for(conn, route: str) -> dict | None:
+    path = route.rstrip("/") or "/"
+    if path == "/index.html":
+        path = "/"
+    if path.startswith("/sector/"):
+        name = SECTOR_BY_SLUG.get(path[len("/sector/"):])
+        if not name:
+            return None
+        build = lambda: sector_page(conn, name)
+    else:
+        build = {"/": lambda: home_page(conn), "/garages": lambda: garages_page(conn),
+                 "/stats": lambda: stats_page(conn), "/trends": lambda: trends_page(conn)}.get(path)
+        if not build:
+            return None
+
+    now = time.time()
+    cached = _page_cache.get(path)
+    if cached and now - cached["at"] < SUMMARY_TTL:
+        return cached
+    page = build()
+    page.update(at=now, path=path,
+                summary=f'<section class="seo">\n  {page.pop("body")}\n{links_html(conn, path)}\n</section>')
+    _page_cache[path] = page
+    return page
+
+
+def sitemap_xml(origin: str) -> str:
+    today = db.now()[:10]
+    paths = [p for p, _ in SECTIONS] + [f"/sector/{slug}" for slug in SECTORS.values()]
+    urls = "".join(
+        f"  <url><loc>{origin}{p}</loc><lastmod>{today}</lastmod><changefreq>hourly</changefreq>"
+        f"<priority>{'1.0' if p == '/' else '0.8'}</priority></url>\n" for p in paths)
+    return ('<?xml version="1.0" encoding="UTF-8"?>\n'
+            f'<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n{urls}</urlset>\n')
 
 
 def api_flag(conn, payload: dict) -> dict:
@@ -791,11 +956,19 @@ class Handler(BaseHTTPRequestHandler):
         host = self.headers.get("host") or "127.0.0.1"
         return f"{scheme}://{host}"
 
-    def send_page(self):
+    def send_page(self, page: dict):
+        init = json.dumps(page["init"], ensure_ascii=False).replace("</", "<\\/")
         with open(INDEX, encoding="utf-8") as fh:
-            page = (fh.read().replace("{{ORIGIN}}", self.origin())
-                            .replace("{{SUMMARY}}", summary_html(self.conn)))
-        self.send_bytes(page.encode(), "text/html; charset=utf-8")
+            html = fh.read()
+        for key, value in (("{{TITLE}}", escape(page["title"])),
+                           ("{{DESCRIPTION}}", escape(page["description"])),
+                           ("{{H1}}", escape(page["h1"])),
+                           ("{{PATH}}", page["path"]),
+                           ("{{INIT}}", init),
+                           ("{{SUMMARY}}", page["summary"]),
+                           ("{{ORIGIN}}", self.origin())):
+            html = html.replace(key, value)
+        self.send_bytes(html.encode(), "text/html; charset=utf-8")
 
     def send_bytes(self, body: bytes, ctype: str, status=200):
         self.send_response(status)
@@ -817,8 +990,9 @@ class Handler(BaseHTTPRequestHandler):
         route = parsed.path
         params = parse_qs(parsed.query)
         try:
-            if route in ("/", "/index.html"):
-                self.send_page()
+            page = None if route.startswith("/api/") else page_for(self.conn, route)
+            if page:
+                self.send_page(page)
             elif route == "/favicon.ico":
                 self.send_file(FAVICON, "image/x-icon")
             elif route == "/og.png":
@@ -827,8 +1001,7 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_bytes(f"{ROBOTS}Sitemap: {self.origin()}/sitemap.xml\n".encode(),
                                 "text/plain; charset=utf-8")
             elif route == "/sitemap.xml":
-                self.send_bytes(SITEMAP.format(origin=self.origin(),
-                                               today=db.now()[:10]).encode(), "application/xml")
+                self.send_bytes(sitemap_xml(self.origin()).encode(), "application/xml")
             elif route == "/api/contact/token":
                 self.send_json({"token": make_token(self.conn)})
             elif route == "/api/meta":

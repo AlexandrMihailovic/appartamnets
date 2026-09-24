@@ -3,24 +3,24 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Недвижимость — анализ</title>
+<title>{{TITLE}}</title>
 <link rel="icon" href="/favicon.ico" sizes="any">
-<meta name="description" content="Анализ рынка недвижимости Кишинёва: цены на квартиры, гаражи и парковки, история изменения цен, статистика по секторам и помесячная динамика стоимости квадратного метра.">
+<meta name="description" content="{{DESCRIPTION}}">
 <meta name="keywords" content="недвижимость Кишинёв, квартиры Кишинёв, купить квартиру в Кишинёве, цены на недвижимость Молдова, аналитика рынка недвижимости, цена за квадратный метр, вторичка и новострой, гаражи и парковки Кишинёв, статистика цен на жильё">
-<meta name="robots" content="index, follow, max-image-preview:large">
-<link rel="canonical" href="{{ORIGIN}}/">
+<meta name="robots" content="max-image-preview:large, max-snippet:-1">
+<link rel="canonical" href="{{ORIGIN}}{{PATH}}">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Недвижимость">
 <meta property="og:locale" content="ru_RU">
-<meta property="og:title" content="Недвижимость Кишинёва — анализ рынка">
-<meta property="og:description" content="Цены на квартиры и гаражи, история изменений, статистика по секторам и динамика EUR/m² по месяцам.">
-<meta property="og:url" content="{{ORIGIN}}/">
+<meta property="og:title" content="{{TITLE}}">
+<meta property="og:description" content="{{DESCRIPTION}}">
+<meta property="og:url" content="{{ORIGIN}}{{PATH}}">
 <meta property="og:image" content="{{ORIGIN}}/og.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Недвижимость Кишинёва — анализ рынка">
-<meta name="twitter:description" content="Цены на квартиры и гаражи, история изменений, статистика по секторам и динамика EUR/m² по месяцам.">
+<meta name="twitter:title" content="{{TITLE}}">
+<meta name="twitter:description" content="{{DESCRIPTION}}">
 <meta name="twitter:image" content="{{ORIGIN}}/og.png">
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"WebSite","name":"Недвижимость — анализ рынка Кишинёва",
@@ -43,9 +43,10 @@
          padding:10px 16px;display:flex;gap:14px;align-items:center;flex-wrap:wrap}
   .brand{font-weight:700;letter-spacing:.4px;margin-right:4px}
   .seg{display:flex;background:var(--panel2);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
-  .seg button{background:none;border:0;padding:7px 14px;cursor:pointer;color:var(--dim);white-space:nowrap}
-  .seg button.on{background:var(--accent);color:#08111f;font-weight:600}
-  .seg button .badge{margin-left:6px;font-size:11px;opacity:.85}
+  .seg button, .seg a{background:none;border:0;padding:7px 14px;cursor:pointer;color:var(--dim);white-space:nowrap}
+  .seg a{text-decoration:none}
+  .seg button.on, .seg a.on{background:var(--accent);color:#08111f;font-weight:600}
+  .seg button .badge, .seg a .badge{margin-left:6px;font-size:11px;opacity:.85}
   .grow{flex:1}
   #search{background:var(--panel2);border:1px solid var(--line);border-radius:var(--radius);
           padding:7px 11px;width:230px}
@@ -53,7 +54,7 @@
   aside{width:255px;flex:none;position:sticky;top:62px;background:var(--panel);border:1px solid var(--line);
         border-radius:var(--radius);padding:12px;max-height:calc(100vh - 78px);overflow:auto}
   aside h3{margin:14px 0 7px;font-size:11px;text-transform:uppercase;letter-spacing:.9px;color:var(--dim)}
-  aside h3:first-child{margin-top:0}
+  aside h3:first-child, aside .sr-only + h3{margin-top:0}
   .pair{display:flex;gap:6px}
   .pair input{width:100%}
   aside input[type=number],aside input[type=text],aside select{
@@ -112,7 +113,7 @@
   table.data th{color:var(--dim);font-weight:500;font-size:12px;text-transform:uppercase;letter-spacing:.6px}
   .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
   .panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:14px}
-  .panel h4{margin:0 0 10px;font-size:13px;color:var(--dim);text-transform:uppercase;letter-spacing:.7px}
+  .panel h3, .panel h4{margin:0 0 10px;font-size:13px;color:var(--dim);text-transform:uppercase;letter-spacing:.7px}
   #mapView{position:relative;z-index:0;height:calc(100vh - 150px);min-height:420px;
            border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
   #map{position:absolute;inset:0;background:#0b0d12}
@@ -164,7 +165,7 @@
   .modal.open{display:flex}
   .modal-box{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
              padding:20px;width:min(480px,100%);box-shadow:0 20px 60px #000b}
-  .modal-box h3{margin:0 0 4px;font-size:17px}
+  .modal-box h2{margin:0 0 4px;font-size:17px}
   .modal-box .sub{color:var(--dim);font-size:12.5px;margin-bottom:14px}
   .modal-box label{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.8px;
                    color:var(--dim);margin:10px 0 4px}
@@ -184,7 +185,7 @@
     .brand{font-size:15px;width:100%;margin:0}
     .seg{max-width:100%;overflow-x:auto;scrollbar-width:none}
     .seg::-webkit-scrollbar{display:none}
-    .seg button{padding:7px 11px;font-size:13px}
+    .seg button, .seg a{padding:7px 11px;font-size:13px}
     #search{width:100%;order:9}
     #dbinfo{font-size:11px;order:10}
     #filtersBtn{display:block;order:8}
@@ -228,6 +229,7 @@
   .seo h2{font-size:17px;color:var(--text);margin:0 0 10px}
   .seo h3{font-size:14px;color:var(--text);margin:20px 0 8px;font-weight:600}
   .seo p{margin:0 0 10px;max-width:820px}
+  .seo nav.links{margin-top:22px;padding-top:4px;border-top:1px solid var(--line)}
   .seo table.data{margin-bottom:6px}
   .seo table.data td{padding:5px 10px}
   @media (max-width: 860px){ .seo{font-size:12.5px;padding:14px 10px 20px} .seo table.data{font-size:12px} }
@@ -238,7 +240,7 @@
 </head>
 <body>
 
-<h1 class="sr-only">Недвижимость Кишинёва: цены, статистика и динамика рынка</h1>
+<h1 class="sr-only">{{H1}}</h1>
 
 
 <header>
@@ -258,7 +260,8 @@
 
 <main>
   <aside>
-    <h3>Цена, EUR</h3>
+    <h2 class="sr-only">Фильтры</h2>
+    <h3>Цена, €</h3>
     <div class="pair"><input type="number" id="price_min" placeholder="от"><input type="number" id="price_max" placeholder="до"></div>
     <h3>Цена за m²</h3>
     <div class="pair"><input type="number" id="ppm_min" placeholder="от"><input type="number" id="ppm_max" placeholder="до"></div>
@@ -328,7 +331,7 @@
         <option value="first_seen">по появлению в базе</option>
         <option value="changed">по дате смены цены</option>
         <option value="drop_pct">по размеру скидки, %</option>
-        <option value="drop_abs">по размеру скидки, EUR</option>
+        <option value="drop_abs">по размеру скидки, €</option>
         <option value="price">по цене</option>
         <option value="ppm">по цене за m²</option>
         <option value="area">по площади</option>
@@ -359,7 +362,7 @@
 
 <div class="modal" id="contact">
   <div class="modal-box">
-    <h3>Связаться</h3>
+    <h2>Связаться</h2>
     <div class="sub">Вопрос, замечание или предложение — напишите, отвечу на указанную почту.</div>
     <form id="contactForm" autocomplete="on">
       <label for="c_name">Как к вам обращаться</label>
@@ -386,17 +389,19 @@
 
 <script>
 const $ = s => document.querySelector(s);
+const PAGE = {{INIT}};
 const hash = new URLSearchParams(location.hash.slice(1));
 const state = {
-  profile: hash.get('profile') || 'apartments', tab: hash.get('tab') || 'new',
+  profile: hash.get('profile') || PAGE.profile, tab: hash.get('tab') || PAGE.tab,
   view: hash.get('view') === 'map' ? 'map' : 'list', offset: 0, limit: 50,
-  rooms: new Set(), housing: new Set(), districts: new Set(), author: '', meta: null,
+  rooms: new Set(), housing: new Set(), districts: new Set(PAGE.district ? [PAGE.district] : []), author: '', meta: null,
   trend: {metric: hash.get('metric') || 'med_ppm', group: hash.get('group') || 'none',
           months: +(hash.get('months') || 24), min_n: +(hash.get('min_n') || 8),
           smooth: +(hash.get('smooth') || 3), gone: hash.get('gone') || 'both', data: null}
 };
 const fmt = n => n == null ? '—' : Math.round(n).toLocaleString('ru-RU').replace(/ /g,' ');
 const esc = s => (s ?? '').toString().replace(/[<>&"]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]));
+const cur = c => c === 'EUR' ? '€' : esc(c);
 const short = s => (s || '').slice(0, 10);
 const days = s => { if(!s) return null;
   const d = new Date(s.replace(' ','T')); const now = new Date();
@@ -408,23 +413,35 @@ function syncHash(){
   const t = state.trend;
   const extra = state.tab === 'trends'
     ? `&metric=${t.metric}&group=${t.group}&months=${t.months}&smooth=${t.smooth}&min_n=${t.min_n}&gone=${t.gone}` : '';
-  location.replace('#profile=' + state.profile + '&tab=' + state.tab + '&view=' + state.view + extra);
+  history.replaceState(null, '', pagePath() + '#profile=' + state.profile + '&tab=' + state.tab + '&view=' + state.view + extra);
+}
+function pagePath(){
+  if(PAGE.district && state.profile === 'apartments' && state.districts.size === 1 && state.districts.has(PAGE.district))
+    return location.pathname;
+  if(state.profile === 'garages') return '/garages';
+  if(state.tab === 'stats' || state.tab === 'trends') return '/' + state.tab;
+  return '/';
+}
+function tabHref(profile, tab){
+  if(profile === 'garages') return '/garages#profile=garages&tab=' + tab;
+  if(tab === 'stats' || tab === 'trends') return '/' + tab;
+  return '/#profile=apartments&tab=' + tab;
 }
 async function loadMeta(){
   syncHash();
   state.meta = await (await fetch('/api/meta')).json();
   const m = state.meta;
   $('#profiles').innerHTML = m.profiles.map(p =>
-    `<button data-p="${p.key}" class="${p.key===state.profile?'on':''}">${p.title}<span class="badge">${p.count}</span></button>`).join('');
-  $('#profiles').onclick = e => { const b = e.target.closest('button'); if(!b) return;
+    `<a href="${p.key === 'garages' ? '/garages' : '/'}" data-p="${p.key}" class="${p.key===state.profile?'on':''}">${p.title}<span class="badge">${p.count}</span></a>`).join('');
+  $('#profiles').onclick = e => { const b = e.target.closest('[data-p]'); if(!b) return; e.preventDefault();
     state.profile = b.dataset.p; state.offset = 0; state.districts.clear(); state.housing.clear();
     loadMeta(); };
   const p = m.profiles.find(x => x.key === state.profile) || {};
   const tabs = [['deals','Выгодные',p.deals],['new',`Новые`,p.recent7],['down','Подешевели',p.down],['all','Все',p.count],
                 ['fav','Избранное',''],['hidden','Скрытые',''],['stats','Статистика',''],['trends','Динамика','']];
   $('#tabs').innerHTML = tabs.map(([k,t,b]) =>
-    `<button data-t="${k}" class="${k===state.tab?'on':''}">${t}${b!==''&&b!=null?`<span class="badge">${b}</span>`:''}</button>`).join('');
-  $('#tabs').onclick = e => { const b = e.target.closest('button'); if(!b) return;
+    `<a href="${tabHref(state.profile, k)}" data-t="${k}" class="${k===state.tab?'on':''}">${t}${b!==''&&b!=null?`<span class="badge">${b}</span>`:''}</a>`).join('');
+  $('#tabs').onclick = e => { const b = e.target.closest('[data-t]'); if(!b) return; e.preventDefault();
     state.tab = b.dataset.t; state.offset = 0; state.sortTouched = false; loadMeta(); };
 
   const isApt = state.profile === 'apartments';
@@ -516,9 +533,9 @@ function card(a){
   const tags = [];
   if(a.is_new) tags.push('<span class="tag new">новое в базе</span>');
   if(age != null && age <= 3) tags.push(`<span class="tag new">размещено ${age === 0 ? 'сегодня' : age + ' дн. назад'}</span>`);
-  if(dropAbs) tags.push(`<span class="tag down">↓ ${fmt(Math.abs(dropAbs))} EUR (${dropPct.toFixed(1)}%)</span>`);
+  if(dropAbs) tags.push(`<span class="tag down">↓ ${fmt(Math.abs(dropAbs))} € (${dropPct.toFixed(1)}%)</span>`);
   if(a.discount != null) tags.push(`<span class="tag deal">выгода −${a.discount.toFixed(0)}% к медиане `
-    + `${esc(a.district)} · ${a.rooms_n}к (${fmt(a.med_ppm)} EUR/m², выборка ${a.pool_n})</span>`);
+    + `${esc(a.district)} · ${a.rooms_n}к (${fmt(a.med_ppm)} €/m², выборка ${a.pool_n})</span>`);
   if(a.terms_flag) tags.push('<span class="tag terms">рассрочка / не под ключ</span>');
   if(a.owner_is_business) tags.push('<span class="tag biz">агентство</span>');
   if(a.housing_stock) tags.push(`<span class="tag">${esc(a.housing_stock)}</span>`);
@@ -531,15 +548,15 @@ function card(a){
     : '';
 
   return `<div class="card ${a.favorite?'fav':''}" data-id="${a.id}">
-    <img class="thumb" loading="lazy" src="${a.photos[0] ? esc(a.photos[0].replace('900x900','320x240')) : ''}" onerror="this.style.visibility='hidden'">
+    <img class="thumb" loading="lazy" alt="${esc(a.title)}" src="${a.photos[0] ? esc(a.photos[0].replace('900x900','320x240')) : ''}" onerror="this.style.visibility='hidden'">
     <div class="body">
       <div class="row1">
         <div class="title">${esc(a.title)}</div>
-        <div class="price">${fmt(a.price)} ${esc(a.currency)}</div>
+        <div class="price">${fmt(a.price)} ${cur(a.currency)}</div>
       </div>
       <div class="meta">
         ${geom ? `<span>${geom}</span>` : ''}
-        ${a.ppm ? `<span class="ppm">${fmt(a.ppm)} EUR/m²</span>` : ''}
+        ${a.ppm ? `<span class="ppm">${fmt(a.ppm)} €/m²</span>` : ''}
         ${a.district ? `<span>${esc(a.district)}</span>` : ''}
         ${a.street ? `<span>${esc(a.street)} ${esc(a.house||'')}</span>` : ''}
       </div>
@@ -638,15 +655,15 @@ async function openAd(id){
     </div>
     <h2 style="margin:0 0 6px">${esc(a.title)}</h2>
     <div style="display:flex;gap:16px;align-items:baseline;margin-bottom:12px">
-      <span class="price" style="font-size:24px">${fmt(a.price)} ${esc(a.currency)}</span>
-      ${a.ppm ? `<span class="ppm">${fmt(a.ppm)} EUR/m²</span>` : ''}
+      <span class="price" style="font-size:24px">${fmt(a.price)} ${cur(a.currency)}</span>
+      ${a.ppm ? `<span class="ppm">${fmt(a.ppm)} €/m²</span>` : ''}
       ${a.prev_price ? `<span class="${a.price<a.prev_price?'down':'up'}">было ${fmt(a.prev_price)}</span>` : ''}
       ${a.old_price ? `<span class="down">на сайте указана старая цена ${fmt(a.old_price)}</span>` : ''}
     </div>
-    <div class="gallery">${(a.photos||[]).map(u =>
-      `<img loading="lazy" src="${esc(u)}" onclick="window.open('${esc(u)}','_blank')">`).join('') || '<span class="muted">фото нет</span>'}</div>
-    <div class="panel" style="margin-top:14px"><h4>История цены</h4>${chart(a.history)}</div>
-    <div class="panel" style="margin-top:14px"><h4>Характеристики</h4>
+    <div class="gallery">${(a.photos||[]).map((u, i) =>
+      `<img loading="lazy" alt="${esc(a.title)} — фото ${i + 1}" src="${esc(u)}" onclick="window.open('${esc(u)}','_blank')">`).join('') || '<span class="muted">фото нет</span>'}</div>
+    <div class="panel" style="margin-top:14px"><h3>История цены</h3>${chart(a.history)}</div>
+    <div class="panel" style="margin-top:14px"><h3>Характеристики</h3>
       <table class="kv">
         ${a.phones ? `<tr><td>Телефон</td><td>${esc(a.phones)}</td></tr>` : ''}
         <tr><td>Адрес</td><td>${[a.city,a.district,a.street,a.house].filter(Boolean).map(esc).join(', ') || '—'}</td></tr>
@@ -661,7 +678,7 @@ async function openAd(id){
         ${feats}
       </table>
     </div>
-    <div class="panel" style="margin-top:14px"><h4>Текст объявления</h4>
+    <div class="panel" style="margin-top:14px"><h3>Текст объявления</h3>
       <div style="white-space:pre-wrap">${esc(a.description) || '—'}</div></div>
     <div style="height:24px"></div>`;
 }
@@ -700,11 +717,12 @@ function popupHtml(arr){
                    p.housing_stock || null,
                    p.owner_is_business ? 'агентство' : null].filter(Boolean).join(' · ');
     return `<div class="mp-item" data-id="${p.id}">
-      <img loading="lazy" src="${p.photo ? esc(p.photo.replace('900x900','320x240')) : ''}"
+      <img loading="lazy" alt="${esc([geom, fmt(p.price) + ' ' + cur(p.currency)].filter(Boolean).join(', '))}"
+           src="${p.photo ? esc(p.photo.replace('900x900','320x240')) : ''}"
            onerror="this.style.visibility='hidden'">
       <div style="min-width:0">
-        <div class="mp-t">${fmt(p.price)} ${esc(p.currency)}
-          ${p.ppm ? `<span class="mp-s">· ${fmt(p.ppm)} EUR/m²</span>` : ''}</div>
+        <div class="mp-t">${fmt(p.price)} ${cur(p.currency)}
+          ${p.ppm ? `<span class="mp-s">· ${fmt(p.ppm)} €/m²</span>` : ''}</div>
         <div class="mp-s">${esc(geom)}</div>
         ${extra ? `<div class="mp-s">${esc(extra)}</div>` : ''}
       </div></div>`;
@@ -763,7 +781,7 @@ async function loadMap(){
   if(mapLayer) mapLayer.remove();
   mapLayer = L.layerGroup().addTo(map);
 
-  const unit = byDeal ? '%' : 'EUR' + (hasPpm ? '/m²' : '');
+  const unit = byDeal ? '%' : '€' + (hasPpm ? '/m²' : '');
   const pts = [];
   for(const [key, arr] of groups){
     const [lat, lon] = key.split(',').map(Number);
@@ -777,7 +795,7 @@ async function loadMap(){
     });
     marker.bindTooltip(
       arr.length > 1 ? `${arr.length} лот. · медиана ${fmt(med)} ${unit}`
-                     : `${fmt(arr[0].price)} ${esc(arr[0].currency)}${arr[0].ppm ? ` · ${fmt(arr[0].ppm)} EUR/m²` : ''}`,
+                     : `${fmt(arr[0].price)} ${cur(arr[0].currency)}${arr[0].ppm ? ` · ${fmt(arr[0].ppm)} €/m²` : ''}`,
       {className: 'maptip', direction: 'top'});
     marker.bindPopup(() => popupHtml(arr), {maxWidth: 320, autoPanPadding: [30, 30]});
     marker.addTo(mapLayer);
@@ -796,7 +814,7 @@ async function loadMap(){
                     `от ${fmt(breaks[3])}`];
     $('#legend').style.display = '';
     $('#legend').innerHTML =
-      `<div style="color:var(--dim);margin-bottom:3px">${byDeal ? 'выгода к медиане, %' : (hasPpm ? 'цена за m², EUR' : 'цена, EUR')}</div>`
+      `<div style="color:var(--dim);margin-bottom:3px">${byDeal ? 'выгода к медиане, %' : (hasPpm ? 'цена за m², €' : 'цена, €')}</div>`
       + titles.map((t, i) => `<div><i style="background:${MAP_COLORS[invert ? 4 - i : i]}"></i>${t}</div>`).join('')
       + `<div class="mp-s" style="margin-top:4px">размер точки — число лотов в доме</div>`
       + `<button class="btn" id="fit" style="margin-top:7px;padding:4px 9px;font-size:12px">вписать всё</button>`;
@@ -834,11 +852,11 @@ async function loadStats(){
   const s = await (await fetch('/api/stats?profile=' + state.profile)).json();
   const hasPpm = s.by_district.some(r => r.avg_ppm != null);
   const pricePanel = hasPpm
-    ? `<h4>Средняя цена за m² по секторам</h4>${bars(s.by_district, 'district', 'avg_ppm', 'EUR')}`
-    : `<h4>Средняя цена по секторам</h4>${bars([...s.by_district].sort((a,b)=>b.avg_price-a.avg_price), 'district', 'avg_price', 'EUR')}`;
+    ? `<h4>Средняя цена за m² по секторам</h4>${bars(s.by_district, 'district', 'avg_ppm', '€')}`
+    : `<h4>Средняя цена по секторам</h4>${bars([...s.by_district].sort((a,b)=>b.avg_price-a.avg_price), 'district', 'avg_price', '€')}`;
   const roomsPanel = s.by_rooms.length ? `
     <div class="panel" style="margin-top:14px"><h4>По количеству комнат</h4>
-      <div class="scroll-x"><table class="data"><tr><th>Комнат</th><th>Лотов</th><th>Ср. площадь</th><th>Ср. цена</th><th>Ср. EUR/m²</th></tr>
+      <div class="scroll-x"><table class="data"><tr><th>Комнат</th><th>Лотов</th><th>Ср. площадь</th><th>Ср. цена</th><th>Ср. €/m²</th></tr>
       ${s.by_rooms.map(r => `<tr><td>${r.rooms === 0 ? 'студия' : r.rooms}</td><td>${fmt(r.n)}</td>
         <td>${fmt(r.avg_area)} m²</td><td>${fmt(r.avg_price)}</td><td>${fmt(r.avg_ppm)}</td></tr>`).join('')}
       </table></div></div>` : '';
@@ -863,10 +881,10 @@ const SERIES_COLORS = ['#3987e5','#d95926','#199e70','#c98500','#d55181','#00830
 const SERIES_DASH = ['', '', '', '', '7 3', '2 3', '10 3 2 3', '4 2 1 2'];
 const MONTH_RU = ['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'];
 const TREND_METRICS = {
-  med_ppm:   {t: 'медиана EUR/m²',  unit: 'EUR/m²', d: 0},
-  avg_ppm:   {t: 'средняя EUR/m²',  unit: 'EUR/m²', d: 0},
-  med_price: {t: 'медиана цены',    unit: 'EUR',    d: 0},
-  avg_price: {t: 'средняя цена',    unit: 'EUR',    d: 0},
+  med_ppm:   {t: 'медиана €/m²',  unit: '€/m²', d: 0},
+  avg_ppm:   {t: 'средняя €/m²',  unit: '€/m²', d: 0},
+  med_price: {t: 'медиана цены',    unit: '€',    d: 0},
+  avg_price: {t: 'средняя цена',    unit: '€',    d: 0},
   med_area:  {t: 'медиана площади', unit: 'm²',     d: 1},
   n:         {t: 'сколько выставили', unit: 'шт.',  d: 0},
 };
@@ -1023,7 +1041,7 @@ function trendTable(data, metric){
     const s = data.series[0]; if(!s) return '';
     const hasPpm = s.points.some(p => p.med_ppm != null);
     const head = `<tr><th>Месяц</th><th>Выставлено</th>${hasPpm
-      ? '<th>Медиана EUR/m²</th><th>Δ к пред.</th><th>Средняя EUR/m²</th><th>p25–p75 EUR/m²</th>' : ''}
+      ? '<th>Медиана €/m²</th><th>Δ к пред.</th><th>Средняя €/m²</th><th>p25–p75 €/m²</th>' : ''}
       <th>Медиана цены</th>${hasPpm ? '<th>Медиана площади</th>' : '<th>Δ цены к пред.</th>'}</tr>`;
     const body = idx.map(i => {
       const p = s.points[i], prev = i > 0 ? s.points[i - 1] : null;
@@ -1137,7 +1155,7 @@ async function loadTrends(){
          ${ch.html}${hidden}
          <div class="muted" style="margin-top:10px">Месяц — это месяц публикации объявления, поэтому в старых месяцах
          остаются лоты, которые долго не продавались${t.gone === 'both' ? ' (снятые с продажи учтены)' : ' (снятые с продажи не учтены — включите галочку выше)'}.
-         Точки, где в месяце меньше ${data.min_n} лотов, не рисуются.${t.metric.endsWith('_ppm') ? ' Цена за m² берётся из карточки, экстремумы вне 100–25 000 EUR/m² отброшены.' : ''}${
+         Точки, где в месяце меньше ${data.min_n} лотов, не рисуются.${t.metric.endsWith('_ppm') ? ' Цена за m² берётся из карточки, экстремумы вне 100–25 000 €/m² отброшены.' : ''}${
          t.smooth > 1 ? ` Линия сглажена скользящим средним по ${t.smooth} месяцам — в подсказке и таблице цифры сырые.` : ''}</div>
        </div>`
     + `<div class="panel" style="margin-top:14px"><h4>Таблица · ${esc(M.t)}</h4>
