@@ -856,6 +856,16 @@ class Handler(BaseHTTPRequestHandler):
                 or self.headers.get("x-real-ip")
                 or self.client_address[0])
 
+    def do_HEAD(self):
+        self.send_response(200)
+        self.send_header("content-type", "text/html; charset=utf-8")
+        self.end_headers()
+
+    def do_OPTIONS(self):
+        self.send_response(204)
+        self.send_header("allow", "GET, HEAD, POST")
+        self.end_headers()
+
     def do_POST(self):
         length = int(self.headers.get("content-length") or 0)
         if length > MAX_BODY:
