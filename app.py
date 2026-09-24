@@ -374,7 +374,25 @@ def api_ad(conn, ad_id: str) -> dict:
         dict(h) for h in conn.execute(
             "SELECT ts, price, currency FROM price_history WHERE ad_id = ? ORDER BY ts", (ad_id,))
     ]
+    item["cadastre"] = ad_cadastre(conn, ad_id)
     return item
+
+
+def ad_cadastre(conn, ad_id: str) -> dict | None:
+    row = conn.execute("SELECT * FROM ad_cadastre WHERE ad_id = ?", (ad_id,)).fetchone()
+    if not row:
+        return None
+    building = conn.execute(
+        "SELECT address, classifier, year_built, floors, condition, walls, gas, water, sewer, "
+        "electrified, updated FROM cad_buildings WHERE code = ?", (row["building"],)).fetchone()
+    codes = json.loads(row["units"] or "[]")
+    units = conn.execute(
+        f"SELECT apt, area, floor, kind, value_lei FROM cad_units WHERE code IN ({', '.join('?' * len(codes))}) "
+        "ORDER BY area", codes).fetchall() if codes else []
+    result = {k: row[k] for k in ("building", "tolerance", "n", "value_min", "value_med", "value_max")}
+    result["house"] = dict(building) if building else None
+    result["units"] = [dict(u) for u in units]
+    return result
 
 
 def api_meta(conn) -> dict:

@@ -121,6 +121,64 @@ CREATE TABLE IF NOT EXISTS messages (
     error TEXT
 );
 CREATE INDEX IF NOT EXISTS messages_ts ON messages(ts);
+
+CREATE TABLE IF NOT EXISTS cad_buildings (
+    code        TEXT PRIMARY KEY,
+    address     TEXT,
+    street      TEXT,
+    house       TEXT,
+    classifier  TEXT,
+    year_built  INTEGER,
+    floors      INTEGER,
+    condition   TEXT,
+    walls       TEXT,
+    gas         TEXT,
+    water       TEXT,
+    sewer       TEXT,
+    electrified TEXT,
+    value_lei   INTEGER,
+    updated     TEXT,
+    props_json  TEXT,
+    geometry    TEXT,
+    fetched_at  TEXT
+);
+CREATE INDEX IF NOT EXISTS cad_b_house ON cad_buildings(house);
+
+CREATE TABLE IF NOT EXISTS cad_units (
+    code       TEXT PRIMARY KEY,
+    building   TEXT NOT NULL,
+    address    TEXT,
+    apt        TEXT,
+    area       REAL,
+    kind       TEXT,
+    floor      INTEGER,
+    wc         TEXT,
+    bath       TEXT,
+    last_floor INTEGER,
+    value_lei  INTEGER
+);
+CREATE INDEX IF NOT EXISTS cad_u_building ON cad_units(building, floor);
+
+CREATE TABLE IF NOT EXISTS cad_points (
+    point      TEXT PRIMARY KEY,
+    buildings  TEXT,
+    status     TEXT,
+    probes     INTEGER,
+    fetched_at TEXT
+);
+
+CREATE TABLE IF NOT EXISTS ad_cadastre (
+    ad_id      TEXT PRIMARY KEY,
+    building   TEXT,
+    match      TEXT,
+    tolerance  REAL,
+    n          INTEGER,
+    value_min  INTEGER,
+    value_med  INTEGER,
+    value_max  INTEGER,
+    units      TEXT,
+    matched_at TEXT
+);
 """
 
 
