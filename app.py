@@ -23,6 +23,7 @@ from profiles import PROFILES
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 INDEX = os.path.join(HERE, "static", "index.html")
+APP_JS = os.path.join(HERE, "static", "app.js")
 FAVICON = os.path.join(HERE, "static", "favicon.ico")
 OG_IMAGE = os.path.join(HERE, "static", "og.png")
 ROBOTS = "User-agent: *\nAllow: /\n\n"
@@ -1049,22 +1050,25 @@ class Handler(BaseHTTPRequestHandler):
                            ("{{PATH}}", page["path"]),
                            ("{{INIT}}", init),
                            ("{{SUMMARY}}", page["summary"]),
+                           ("{{ASSET_V}}", str(int(os.path.getmtime(APP_JS)))),
                            ("{{ORIGIN}}", self.origin())):
             html = html.replace(key, value)
         self.send_bytes(html.encode(), "text/html; charset=utf-8")
 
-    def send_bytes(self, body: bytes, ctype: str, status=200):
+    def send_bytes(self, body: bytes, ctype: str, status=200, cache: str | None = None):
         self.send_response(status)
         self.send_header("content-type", ctype)
+        if cache:
+            self.send_header("cache-control", cache)
         if ctype.startswith("text/html"):
             self.send_header("x-robots-tag", "index, follow")
         self.send_header("content-length", str(len(body)))
         self.end_headers()
         self.wfile.write(body)
 
-    def send_file(self, path: str, ctype: str):
+    def send_file(self, path: str, ctype: str, cache: str | None = None):
         with open(path, "rb") as fh:
-            self.send_bytes(fh.read(), ctype)
+            self.send_bytes(fh.read(), ctype, cache=cache)
 
     def send_json(self, payload, status=200):
         self.send_bytes(json.dumps(payload, ensure_ascii=False).encode(),
@@ -1082,6 +1086,9 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_file(FAVICON, "image/x-icon")
             elif route == "/og.png":
                 self.send_file(OG_IMAGE, "image/png")
+            elif route == "/app.js":
+                self.send_file(APP_JS, "application/javascript; charset=utf-8",
+                               cache="public, max-age=31536000, immutable")
             elif route == "/robots.txt":
                 self.send_bytes(f"{ROBOTS}Sitemap: {self.origin()}/sitemap.xml\n".encode(),
                                 "text/plain; charset=utf-8")
