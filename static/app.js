@@ -129,6 +129,7 @@ async function loadMeta(){
   $('#sort').querySelector('[value=discount]').disabled = !onDeals;
   if(onDeals && !state.sortTouched) $('#sort').value = 'discount';
   if(!onDeals && $('#sort').value === 'discount') $('#sort').value = 'posted';
+  document.querySelector('aside').classList.remove('loading');
   refresh();
 }
 function refresh(){
@@ -1000,12 +1001,12 @@ function trendControls(){
   const t = state.trend;
   const opt = (arr, cur) => arr.map(([v, txt]) => `<option value="${v}" ${v == cur ? 'selected' : ''}>${txt}</option>`).join('');
   return `<div class="ctlbar">
-    <div class="ctl"><label>показатель</label><select id="t_metric">
+    <div class="ctl"><label for="t_metric">показатель</label><select id="t_metric">
       ${opt(Object.entries(TREND_METRICS).map(([k, m]) => [k, m.t]), t.metric)}</select></div>
-    <div class="ctl"><label>разрез</label><select id="t_group">${opt(TREND_GROUPS_UI, t.group)}</select></div>
-    <div class="ctl"><label>период</label><select id="t_months">
+    <div class="ctl"><label for="t_group">разрез</label><select id="t_group">${opt(TREND_GROUPS_UI, t.group)}</select></div>
+    <div class="ctl"><label for="t_months">период</label><select id="t_months">
       ${opt([[12,'12 месяцев'],[24,'24 месяца'],[36,'3 года'],[60,'5 лет'],[120,'всё, что есть']], t.months)}</select></div>
-    <div class="ctl"><label>сглаживание</label><select id="t_smooth">
+    <div class="ctl"><label for="t_smooth">сглаживание</label><select id="t_smooth">
       ${opt([[1,'нет — как есть'],[3,'3 месяца'],[5,'5 месяцев']], t.smooth)}</select></div>
     <div class="ctl"><label>мин. лотов в месяце</label><input type="number" id="t_min_n" value="${t.min_n}" style="width:96px"></div>
     <div class="ctl"><label>&nbsp;</label><label class="check" style="margin:0"><input type="checkbox" id="t_gone"

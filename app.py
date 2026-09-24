@@ -969,6 +969,32 @@ def sector_page(conn, name: str) -> dict:
             "init": {"profile": "apartments", "tab": "all", "district": name}, "body": body}
 
 
+TAB_TITLES = [("deals", "Выгодные", "deals"), ("new", "Новые", "recent7"), ("down", "Подешевели", "down"),
+              ("all", "Все", "count"), ("fav", "Избранное", None), ("stats", "Статистика", None),
+              ("trends", "Динамика", None)]
+
+
+def tab_href(profile: str, tab: str) -> str:
+    if profile == "garages":
+        return f"/garages#profile=garages&tab={tab}"
+    if tab in ("stats", "trends"):
+        return f"/{tab}"
+    return f"/#profile=apartments&tab={tab}"
+
+
+def nav_html(profiles: list, init: dict) -> tuple[str, str]:
+    badge = lambda n: f'<span class="badge">{n}</span>' if n not in (None, "") else ""
+    cur = init.get("profile", "apartments")
+    top = "".join(
+        f'<a href="{"/garages" if p["key"] == "garages" else "/"}" data-p="{p["key"]}" '
+        f'class="{"on" if p["key"] == cur else ""}">{escape(p["title"])}{badge(p["count"])}</a>' for p in profiles)
+    counts = next((p for p in profiles if p["key"] == cur), {})
+    tabs = "".join(
+        f'<a href="{tab_href(cur, key)}" data-t="{key}" class="{"on" if key == init.get("tab") else ""}">'
+        f'{title}{badge(counts.get(field)) if field else ""}</a>' for key, title, field in TAB_TITLES)
+    return top, tabs
+
+
 def page_for(conn, route: str) -> dict | None:
     path = route.rstrip("/") or "/"
     if path == "/index.html":
@@ -989,6 +1015,7 @@ def page_for(conn, route: str) -> dict | None:
     if cached and now - cached["at"] < SUMMARY_TTL:
         return cached
     page = build()
+    page["nav"] = nav_html(api_meta(conn)["profiles"], page["init"])
     page.update(at=now, path=path,
                 summary=f'<section class="seo">\n  {page.pop("body")}\n{links_html(conn, path)}\n</section>')
     _page_cache[path] = page
@@ -1050,6 +1077,8 @@ class Handler(BaseHTTPRequestHandler):
                            ("{{PATH}}", page["path"]),
                            ("{{INIT}}", init),
                            ("{{SUMMARY}}", page["summary"]),
+                           ("{{NAV_PROFILES}}", page["nav"][0]),
+                           ("{{NAV_TABS}}", page["nav"][1]),
                            ("{{ASSET_V}}", str(int(os.path.getmtime(APP_JS)))),
                            ("{{ORIGIN}}", self.origin())):
             html = html.replace(key, value)
