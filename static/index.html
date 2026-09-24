@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
 <title>{{TITLE}}</title>
 <link rel="icon" href="/favicon.ico" sizes="any">
 <meta name="description" content="{{DESCRIPTION}}">
@@ -31,13 +32,22 @@
 </script>
 <style>
   :root{
-    --bg:#0f1115; --panel:#171a21; --panel2:#1e222b; --line:#2a2f3a;
-    --text:#e6e8ee; --dim:#98a0b3; --accent:#4c9aff; --good:#3ddc97; --bad:#ff6b6b;
-    --warn:#ffc55c; --radius:10px;
+    color-scheme:light dark;
+    --bg:#0f1115; --panel:#171a21; --panel2:#1e222b; --line:#2a2f3a; --hover:#3a4457;
+    --text:#e6e8ee; --dim:#98a0b3; --accent:#4c9aff; --on-accent:#08111f;
+    --good:#3ddc97; --bad:#ff6b6b; --warn:#ffc55c; --terms:#c3cad8;
+    --scroll:#343a47; --map-bg:#0b0d12; --shadow:#000a; --radius:10px;
   }
-  :root{color-scheme:dark}
+  @media (prefers-color-scheme: light){
+    :root{
+      --bg:#f2f4f7; --panel:#ffffff; --panel2:#eef1f5; --line:#dce1e8; --hover:#b7c0ce;
+      --text:#161a21; --dim:#5b6475; --accent:#1c6de0; --on-accent:#ffffff;
+      --good:#0b8a56; --bad:#cf3434; --warn:#b06a00; --terms:#485062;
+      --scroll:#c4cbd5; --map-bg:#e8ebef; --shadow:#1a20302e;
+    }
+  }
   *{box-sizing:border-box}
-  *{scrollbar-width:thin;scrollbar-color:#343a47 transparent}
+  *{scrollbar-width:thin;scrollbar-color:var(--scroll) transparent}
   body{margin:0;background:var(--bg);color:var(--text);
        font:14px/1.45 -apple-system,Segoe UI,Roboto,Ubuntu,sans-serif}
   a{color:var(--accent);text-decoration:none}
@@ -49,7 +59,7 @@
   .seg{display:flex;background:var(--panel2);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
   .seg button, .seg a{background:none;border:0;padding:6px 11px;cursor:pointer;color:var(--dim);white-space:nowrap}
   .seg a{text-decoration:none}
-  .seg button.on, .seg a.on{background:var(--accent);color:#08111f;font-weight:600}
+  .seg button.on, .seg a.on{background:var(--accent);color:var(--on-accent);font-weight:600}
   .seg button .badge, .seg a .badge{margin-left:6px;font-size:11px;opacity:.85}
   .grow{flex:1}
   #dbinfo{font-size:12px}
@@ -59,7 +69,7 @@
   aside{width:232px;flex:none;background:var(--panel);border:1px solid var(--line);
         border-radius:var(--radius);padding:10px 11px}
   aside h3{margin:11px 0 5px;font-size:12px;font-weight:600;color:var(--dim)}
-  aside h3:first-child, aside .sr-only + h3{margin-top:0}
+  aside > h3:first-child, aside .sr-only + h3{margin-top:0}
   .pair{display:flex;gap:6px}
   .pair input{width:100%}
   .pair .check{flex:1;white-space:nowrap;margin:6px 0 0}
@@ -69,20 +79,22 @@
   .chips{display:flex;flex-wrap:wrap;gap:4px}
   .chip{background:var(--panel2);border:1px solid var(--line);border-radius:20px;padding:2px 9px;
         cursor:pointer;font-size:12px;color:var(--dim);user-select:none}
-  .chip.on{background:var(--accent);border-color:var(--accent);color:#08111f;font-weight:600}
+  .hint{font-size:11.5px;color:var(--dim);margin-top:4px}
+  #developers:not(.all) .chip.extra:not(.on){display:none}
+  .chip.on{background:var(--accent);border-color:var(--accent);color:var(--on-accent);font-weight:600}
   .check{display:flex;align-items:center;gap:7px;margin:4px 0;cursor:pointer;color:var(--dim);font-size:13px}
   .check input{accent-color:var(--accent)}
   .btn{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:7px 12px;cursor:pointer}
   .btn:hover{border-color:var(--accent)}
-  .btn.primary{background:var(--accent);color:#08111f;border-color:var(--accent);font-weight:600}
+  .btn.primary{background:var(--accent);color:var(--on-accent);border-color:var(--accent);font-weight:600}
   section.list{flex:1;min-width:0}
   .toolbar{display:flex;gap:10px;align-items:center;margin-bottom:10px;flex-wrap:wrap}
   .count{color:var(--dim)}
-  #results{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(430px,100%),1fr));gap:8px}
+  #results.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(430px,100%),1fr));gap:8px}
   #results > .empty{grid-column:1/-1}
   .card{display:flex;gap:11px;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
         padding:8px;cursor:pointer;transition:border-color .12s;min-width:0}
-  .card:hover{border-color:#3a4457}
+  .card:hover{border-color:var(--hover)}
   .card.fav{box-shadow:inset 3px 0 0 var(--warn)}
   .thumb{width:118px;height:92px;flex:none;border-radius:7px;object-fit:cover;background:var(--panel2)}
   .body{flex:1;min-width:0;display:flex;flex-direction:column}
@@ -97,10 +109,34 @@
   .foot{display:flex;align-items:center;gap:6px;margin-top:auto;padding-top:5px}
   .tags{display:flex;gap:5px;flex-wrap:wrap;align-items:center;flex:1;min-width:0;max-height:22px;overflow:hidden}
   .tag{font-size:11px;padding:1px 7px;border-radius:20px;background:var(--panel2);color:var(--dim);white-space:nowrap}
-  .tag.new{background:rgba(61,220,151,.15);color:var(--good)}
-  .tag.down{background:rgba(255,107,107,.15);color:var(--bad)}
-  .tag.biz{background:rgba(255,197,92,.13);color:var(--warn)}
-  .tag.terms{background:rgba(152,160,179,.16);color:#c3cad8}
+  .tag.new{background:color-mix(in srgb,var(--good) 15%,transparent);color:var(--good)}
+  .tag.down{background:color-mix(in srgb,var(--bad) 15%,transparent);color:var(--bad)}
+  .tag.biz{background:color-mix(in srgb,var(--warn) 14%,transparent);color:var(--warn)}
+  .tag.terms{background:color-mix(in srgb,var(--dim) 16%,transparent);color:var(--terms)}
+  table.ads{width:100%;border-collapse:separate;border-spacing:0;background:var(--panel);
+            border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+  table.ads th{font-weight:500;font-size:12px;color:var(--dim);text-align:left;padding:7px 8px;
+               border-bottom:1px solid var(--line);white-space:nowrap}
+  table.ads td{padding:5px 8px;border-bottom:1px solid var(--line);vertical-align:middle}
+  table.ads tbody tr:last-child td{border-bottom:0}
+  table.ads tbody tr{cursor:pointer}
+  table.ads tbody tr:hover td{background:var(--panel2)}
+  table.ads tr.fav td:first-child{box-shadow:inset 3px 0 0 var(--warn)}
+  table.ads .num{text-align:right;white-space:nowrap}
+  table.ads .nw{white-space:nowrap}
+  table.ads td.ph{width:68px;padding-right:0}
+  .mini{width:60px;height:45px;border-radius:5px;object-fit:cover;background:var(--panel2);display:block}
+  table.ads td.ttl{width:100%;max-width:0}
+  td.ttl .t{font-weight:600;font-size:14px;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;
+            -webkit-box-orient:vertical;overflow:hidden}
+  td.ttl .sub{color:var(--dim);font-size:12px;margin-top:2px;display:flex;gap:5px;align-items:center;
+             white-space:nowrap;overflow:hidden;max-height:19px}
+  table.ads td.price{font-size:15px;font-weight:700}
+  table.ads td.chg{white-space:nowrap}
+  td.chg span{display:block}
+  table.ads td.act{white-space:nowrap;text-align:right}
+  td.act .btn + .btn{margin-left:4px}
+  @media (max-width: 1280px){ table.ads .opt{display:none} table.ads .long{display:none} }
   .btn.star{font-size:12px;padding:3px 8px;color:var(--dim);line-height:1.2;flex:none}
   .btn.star.on{color:var(--warn);border-color:var(--warn)}
   .btn.open{font-size:12px;padding:3px 9px;color:var(--text);text-decoration:none;white-space:nowrap;flex:none}
@@ -126,16 +162,16 @@
   .panel h3, .panel h4{margin:0 0 10px;font-size:13px;color:var(--dim);text-transform:uppercase;letter-spacing:.7px}
   #mapView{position:relative;z-index:0;height:calc(100vh - 150px);min-height:420px;
            border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
-  #map{position:absolute;inset:0;background:#0b0d12}
-  .leaflet-container{background:#0b0d12;font:inherit}
+  #map{position:absolute;inset:0;background:var(--map-bg)}
+  .leaflet-container{background:var(--map-bg);font:inherit}
   .leaflet-popup-content-wrapper,.leaflet-popup-tip{background:var(--panel);color:var(--text);
-      border:1px solid var(--line);box-shadow:0 10px 30px #000a}
+      border:1px solid var(--line);box-shadow:0 10px 30px var(--shadow)}
   .leaflet-popup-content{margin:9px 11px;width:296px!important;max-height:330px;overflow:auto}
   .leaflet-popup-close-button{color:var(--dim)!important}
   .leaflet-bar a,.leaflet-control-layers{background:var(--panel2);color:var(--text);
       border-color:var(--line)!important}
   .leaflet-bar a:hover{background:var(--panel)}
-  .leaflet-control-attribution{background:#0b0d12cc!important;color:var(--dim)!important}
+  .leaflet-control-attribution{background:color-mix(in srgb,var(--map-bg) 80%,transparent)!important;color:var(--dim)!important}
   .leaflet-control-attribution a{color:var(--dim)!important}
   .maptip{background:var(--panel);border:1px solid var(--line);color:var(--text);
           border-radius:7px;padding:3px 7px;font-size:12px;box-shadow:none;white-space:nowrap}
@@ -161,7 +197,7 @@
   .chartwrap{position:relative}
   .chartwrap svg{display:block}
   .tipbox{position:absolute;pointer-events:none;z-index:20;background:var(--panel2);border:1px solid var(--line);
-          border-radius:8px;padding:7px 9px;font-size:12px;box-shadow:0 8px 24px #000a;display:none;min-width:150px}
+          border-radius:8px;padding:7px 9px;font-size:12px;box-shadow:0 8px 24px var(--shadow);display:none;min-width:150px}
   .tipbox b{font-size:12.5px}
   .tiprow{display:flex;align-items:center;gap:7px;justify-content:space-between;margin-top:3px;white-space:nowrap}
   .tiprow i{display:inline-block;width:9px;height:9px;border-radius:50%;flex:none}
@@ -174,7 +210,7 @@
   .modal{position:fixed;inset:0;z-index:1300;display:none;align-items:center;justify-content:center;padding:16px;background:#000a}
   .modal.open{display:flex}
   .modal-box{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
-             padding:20px;width:min(480px,100%);box-shadow:0 20px 60px #000b}
+             padding:20px;width:min(480px,100%);box-shadow:0 20px 60px var(--shadow)}
   .modal-box h2{margin:0 0 4px;font-size:17px}
   .modal-box .sub{color:var(--dim);font-size:12.5px;margin-bottom:14px}
   .modal-box label{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.8px;
@@ -199,6 +235,7 @@
     #search{width:100%;order:9}
     #dbinfo{font-size:11px;order:10}
     #filtersBtn{display:block;order:8}
+    #layout{display:none}
     #contactBtn{order:11}
 
     main{padding:10px;gap:0}
@@ -283,12 +320,21 @@
       <div class="pair"><input type="number" id="floor_min" placeholder="от"><input type="number" id="floor_max" placeholder="до"></div>
       <div class="pair"><label class="check"><input type="checkbox" id="not_first"> не первый</label>
       <label class="check"><input type="checkbox" id="not_last"> не последний</label></div>
+      <h3>Этажей в доме</h3>
+      <div class="pair"><input type="number" id="floors_min" placeholder="от"><input type="number" id="floors_max" placeholder="до"></div>
       <h3>Жилой фонд</h3>
       <div class="chips" id="housing"></div>
     </div>
+    <div class="fgroup"><h3>Состояние</h3><div class="chips" id="condition"></div></div>
+    <div class="fgroup"><h3>Тип здания</h3><div class="chips" id="building"></div></div>
+    <div class="fgroup"><h3>Застройщик</h3><div class="chips" id="developers"></div></div>
+    <div class="fgroup"><h3>Тип стоянки</h3><div class="chips" id="parking"></div></div>
 
     <h3>Сектор</h3>
     <div class="chips" id="districts"></div>
+    <div class="fgroup"><h3>Населённый пункт</h3><div class="chips" id="locality"></div></div>
+    <div class="fgroup"><h3>Удобства</h3><div class="chips" id="amen"></div>
+      <div class="hint">только объявления, где продавец это указал</div></div>
 
     <div class="deals-only">
       <h3>Правила выгодных</h3>
@@ -312,6 +358,7 @@
       <span class="chip" data-v="">любой</span>
       <span class="chip" data-v="private">частник</span>
       <span class="chip" data-v="business">агентство</span>
+      <span class="chip" data-v="developer">застройщик</span>
     </div>
 
     <label class="check" style="margin-top:9px"><input type="checkbox" id="has_photo"> только с фото</label>
@@ -327,6 +374,7 @@
   <section class="list">
     <div class="toolbar">
       <span class="count" id="count"></span>
+      <div class="seg" id="layout"><button data-l="table">Таблица</button><button data-l="tiles">Плитка</button></div>
       <div class="grow"></div>
       <label class="muted">сортировка</label>
       <select id="sort" style="background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:6px 9px">
@@ -403,6 +451,14 @@ const state = {
           months: +(hash.get('months') || 24), min_n: +(hash.get('min_n') || 8),
           smooth: +(hash.get('smooth') || 3), gone: hash.get('gone') || 'both', data: null}
 };
+const CHIP_SETS = ['condition', 'building', 'locality', 'developers', 'parking', 'amen'];
+CHIP_SETS.forEach(k => state[k] = new Set());
+const AMEN = {
+  apartments: [['heating','автономное отопление'],['lift','лифт'],['furnished','мебель'],['appliances','бытовая техника'],
+               ['ready','готова к въезду'],['ac','кондиционер'],['parking','парковка'],['baths2','2+ санузла'],['balcony','балкон']],
+  garages: [['electric','электричество'],['pit','смотровая яма'],['guard','круглосуточная охрана'],['cctv','видеонаблюдение']],
+};
+const DEV_SHOWN = 12;
 const fmt = n => n == null ? '—' : Math.round(n).toLocaleString('ru-RU').replace(/ /g,' ');
 const esc = s => (s ?? '').toString().replace(/[<>&"]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]));
 const cur = c => c === 'EUR' ? '€' : esc(c);
@@ -413,6 +469,7 @@ function toggleFav(id){
   try { localStorage.setItem(FAV_KEY, JSON.stringify([...favs])); } catch(e){}
   return favs.has(id);
 }
+const isFav = a => favs.has(String(a.id));
 const short = s => (s || '').slice(0, 10);
 const days = s => { if(!s) return null;
   const d = new Date(s.replace(' ','T')); const now = new Date();
@@ -446,6 +503,7 @@ async function loadMeta(){
     `<a href="${p.key === 'garages' ? '/garages' : '/'}" data-p="${p.key}" class="${p.key===state.profile?'on':''}">${p.title}<span class="badge">${p.count}</span></a>`).join('');
   $('#profiles').onclick = e => { const b = e.target.closest('[data-p]'); if(!b) return; e.preventDefault();
     state.profile = b.dataset.p; state.offset = 0; state.districts.clear(); state.housing.clear();
+    CHIP_SETS.forEach(k => state[k].clear());
     loadMeta(); };
   const p = m.profiles.find(x => x.key === state.profile) || {};
   const tabs = [['deals','Выгодные',p.deals],['new',`Новые`,p.recent7],['down','Подешевели',p.down],['all','Все',p.count],
@@ -469,6 +527,27 @@ async function loadMeta(){
     .map(([v,t]) => `<span class="chip ${state.rooms.has(v)?'on':''}" data-r="${v}">${t}</span>`).join('');
   $('#dbinfo').textContent = `карточек: ${m.details_done} · сбор: ${(m.runs[0]||{}).finished || '—'}`;
 
+  const chipsOf = (id, values, set, label = v => v) => {
+    const el = $('#' + id);
+    el.innerHTML = values.map((v, i) =>
+      `<span class="chip ${set.has(v)?'on':''} ${i >= DEV_SHOWN ? 'extra' : ''}" data-v="${esc(v)}">${esc(label(v))}</span>`).join('');
+    el.closest('.fgroup').style.display = values.length ? '' : 'none';
+    el.onclick = e => toggle(e, 'v', set);
+  };
+  ['condition', 'building', 'locality', 'parking'].forEach(k => chipsOf(k, c[k] || [], state[k]));
+  const amen = AMEN[state.profile] || [], amenNames = Object.fromEntries(amen);
+  chipsOf('amen', amen.map(x => x[0]), state.amen, k => amenNames[k]);
+  chipsOf('developers', state.profile === 'apartments' ? c.developers || [] : [], state.developers);
+  const devs = $('#developers');
+  if((c.developers || []).length > DEV_SHOWN && state.profile === 'apartments'){
+    devs.insertAdjacentHTML('beforeend', `<span class="chip more">${devs.classList.contains('all') ? 'свернуть' : 'ещё ' + (c.developers.length - DEV_SHOWN)}</span>`);
+    devs.onclick = e => {
+      const more = e.target.closest('.more');
+      if(!more) return toggle(e, 'v', state.developers);
+      devs.classList.toggle('all');
+      more.textContent = devs.classList.contains('all') ? 'свернуть' : 'ещё ' + (c.developers.length - DEV_SHOWN);
+    };
+  }
   $('#housing').onclick = e => toggle(e, 'h', state.housing);
   $('#rooms').onclick   = e => toggle(e, 'r', state.rooms);
   $('#districts').onclick = e => toggle(e, 'd', state.districts);
@@ -501,7 +580,7 @@ function refresh(){
   else load();
 }
 function toggle(e, key, set){
-  const chip = e.target.closest('.chip'); if(!chip) return;
+  const chip = e.target.closest('.chip'); if(!chip || chip.dataset[key] == null) return;
   const v = chip.dataset[key];
   set.has(v) ? set.delete(v) : set.add(v);
   chip.classList.toggle('on');
@@ -511,7 +590,7 @@ function query(){
   const q = new URLSearchParams({profile: state.profile, tab: state.tab,
     sort: $('#sort').value, dir: $('#dir').value, limit: state.limit, offset: state.offset});
   const add = (k, v) => { if(v !== '' && v != null) q.set(k, v); };
-  ['price_min','price_max','ppm_min','ppm_max','area_min','area_max','floor_min','floor_max','age_max','views_min',
+  ['price_min','price_max','ppm_min','ppm_max','area_min','area_max','floor_min','floor_max','floors_min','floors_max','age_max','views_min',
    'discount_min','discount_max','min_area','pool_min']
     .forEach(id => add(id, $('#'+id).value));
   add('q', $('#search').value.trim());
@@ -522,6 +601,7 @@ function query(){
   if(state.rooms.size) q.set('rooms', [...state.rooms].join(','));
   if(state.housing.size) q.set('housing', [...state.housing].join(','));
   if(state.districts.size) q.set('districts', [...state.districts].join(','));
+  CHIP_SETS.forEach(k => { if(state[k].size) q.set(k, [...state[k]].join(',')); });
   if(state.author) q.set('author', state.author);
   if(state.tab === 'fav') q.set('ids', [...favs].join(',') || '0');
   return q;
@@ -536,7 +616,7 @@ function spark(hist, w = 64, h = 18){
   return `<svg width="${w}" height="${h}"><polyline points="${pts}" fill="none" stroke="${color}" stroke-width="1.8"/></svg>`;
 }
 
-function card(a){
+function facts(a){
   const dropAbs = a.drop_abs ?? (a.old_price && a.old_price > a.price ? a.price - a.old_price : null);
   const dropBase = a.prev_price ?? a.old_price;
   const dropPct = dropAbs && dropBase ? dropAbs / dropBase * 100 : null;
@@ -548,35 +628,67 @@ function card(a){
   if(a.owner_is_business) tags.push('<span class="tag biz">агентство</span>');
   if(a.housing_stock) tags.push(`<span class="tag">${esc(a.housing_stock)}</span>`);
   if(a.developer) tags.push(`<span class="tag">${esc(a.developer)}</span>`);
+  const fav = isFav(a);
+  return {
+    fav, tags,
+    photo: a.photos[0] ? esc(a.photos[0].replace('900x900','320x240')) : '',
+    addr: [a.district, [a.street, a.house].filter(Boolean).join(' ')].filter(Boolean).join(' · '),
+    seen: [age != null && age > 3 ? `${age} дн. на сайте` : null,
+           a.views_total ? `${fmt(a.views_total)} просм.` : null].filter(Boolean).join(', '),
+    change: (a.discount != null ? `<span class="gain" title="медиана: ${esc(a.district)}, ${a.rooms_n}-комн., ${fmt(a.med_ppm)} €/m², выборка ${a.pool_n}">−${a.discount.toFixed(0)}% к медиане</span>` : '')
+          + (dropAbs ? `<span class="drop">↓ ${fmt(Math.abs(dropAbs))} € (${dropPct.toFixed(1)}%)</span>` : ''),
+    actions: `<button class="btn star ${fav?'on':''}" data-act="fav" title="${fav?'убрать из избранного':'в избранное'}">★</button>`
+           + `<a class="btn open" href="https://999.md/ru/${a.id}" target="_blank" rel="noopener"><span class="long">открыть на </span>999.md</a>`,
+  };
+}
 
+function card(a){
+  const f = facts(a);
   const geom = state.profile === 'apartments'
     ? [a.rooms_n != null ? (a.rooms_n === 0 ? 'студия' : a.rooms_n + '-комн.') : null,
        a.area ? a.area + ' m²' : null,
        a.floor ? `${a.floor}/${a.floors_total || '?'} эт.` : null].filter(Boolean).join(' · ')
     : '';
-
-  const fav = favs.has(String(a.id));
-  const place = [geom, a.district, [a.street, a.house].filter(Boolean).join(' ')].filter(Boolean).join(' · ');
-  const seen = [age != null && age > 3 ? `${age} дн. на сайте` : null,
-                a.views_total ? `${fmt(a.views_total)} просм.` : null].filter(Boolean).join(', ');
-  return `<div class="card ${fav?'fav':''}" data-id="${a.id}">
-    <img class="thumb" loading="lazy" alt="${esc(a.title)}" src="${a.photos[0] ? esc(a.photos[0].replace('900x900','320x240')) : ''}" onerror="this.style.visibility='hidden'">
+  const place = [geom, f.addr].filter(Boolean).join(' · ');
+  return `<div class="card ${f.fav?'fav':''}" data-id="${a.id}">
+    <img class="thumb" loading="lazy" alt="${esc(a.title)}" src="${f.photo}" onerror="this.style.visibility='hidden'">
     <div class="body">
       <div class="title">${esc(a.title)}</div>
       <div class="pricebar">
         <span class="price">${fmt(a.price)} ${cur(a.currency)}</span>
         ${a.ppm ? `<span class="ppm">${fmt(a.ppm)} €/m²</span>` : ''}
-        ${a.discount != null ? `<span class="gain" title="медиана: ${esc(a.district)}, ${a.rooms_n}-комн., ${fmt(a.med_ppm)} €/m², выборка ${a.pool_n}">−${a.discount.toFixed(0)}% к медиане</span>` : ''}
-        ${dropAbs ? `<span class="drop">↓ ${fmt(Math.abs(dropAbs))} € (${dropPct.toFixed(1)}%)</span>` : ''}
+        ${f.change}
       </div>
-      <div class="meta" title="${esc(place)}">${esc(place)}${seen ? ` <span class="muted">· ${seen}</span>` : ''}</div>
+      <div class="meta" title="${esc(place)}">${esc(place)}${f.seen ? ` <span class="muted">· ${f.seen}</span>` : ''}</div>
       <div class="foot">
-        <div class="tags">${tags.join('')}${spark(a.hist)}</div>
-        <button class="btn star ${fav?'on':''}" data-act="fav" title="${fav?'убрать из избранного':'в избранное'}">★</button>
-        <a class="btn open" href="https://999.md/ru/${a.id}" target="_blank" rel="noopener">открыть на 999.md</a>
+        <div class="tags">${f.tags.join('')}${spark(a.hist)}</div>
+        ${f.actions}
       </div>
     </div>
   </div>`;
+}
+
+function tableHead(){
+  const apt = state.profile === 'apartments';
+  return `<table class="ads"><thead><tr><th></th><th>Объявление</th><th class="num">Цена</th>`
+    + (apt ? '<th class="num">€/m²</th><th class="opt">Комн.</th><th class="num opt">Площадь</th><th class="opt">Этаж</th>' : '')
+    + '<th>Изменение</th><th></th></tr></thead><tbody></tbody></table>';
+}
+
+function row(a){
+  const f = facts(a);
+  const apt = state.profile === 'apartments';
+  const rooms = a.rooms_n == null ? '—' : a.rooms_n === 0 ? 'студия' : a.rooms_n;
+  return `<tr class="ad ${f.fav?'fav':''}" data-id="${a.id}">
+    <td class="ph"><img class="mini" loading="lazy" alt="${esc(a.title)}" src="${f.photo}" onerror="this.style.visibility='hidden'"></td>
+    <td class="ttl"><div class="t">${esc(a.title)}</div>
+      <div class="sub"><span>${esc(f.addr)}${f.seen ? ' · ' + f.seen : ''}</span>${f.tags.slice(0, 3).join('')}</div></td>
+    <td class="num price">${fmt(a.price)} ${cur(a.currency)}</td>
+    ${apt ? `<td class="num muted">${a.ppm ? fmt(a.ppm) : '—'}</td><td class="nw opt">${rooms}</td>
+    <td class="num opt">${a.area ? a.area + ' m²' : '—'}</td><td class="nw opt">${a.floor ? `${a.floor}/${a.floors_total || '?'}` : '—'}</td>` : ''}
+    <td class="chg">${f.change}</td>
+    <td class="act">${f.actions}</td>
+  </tr>`;
 }
 
 const AUTO_PAGES = 3;
@@ -604,9 +716,13 @@ async function more(){
     else $('#pager').innerHTML = `<button class="btn" data-more>${esc(data.error)} · повторить</button>`;
     return;
   }
-  if(!feed.pages) $('#results').innerHTML = data.items.length ? ''
-    : '<div class="empty">Ничего не найдено. Ослабьте фильтры.</div>';
-  $('#results').insertAdjacentHTML('beforeend', data.items.map(card).join(''));
+  const tiles = layout() === 'tiles';
+  if(!feed.pages){
+    $('#results').className = tiles ? 'tiles' : 'rows';
+    $('#results').innerHTML = !data.items.length ? '<div class="empty">Ничего не найдено. Ослабьте фильтры.</div>'
+      : tiles ? '' : tableHead();
+  }
+  (tiles ? $('#results') : $('#results tbody')).insertAdjacentHTML('beforeend', data.items.map(tiles ? card : row).join(''));
   feed.pages++; feed.total = data.total; state.offset += data.items.length;
   const left = feed.total - state.offset;
   $('#count').textContent = `найдено ${fmt(feed.total)}` + (left > 0 ? ` · показано ${fmt(state.offset)}` : '');
@@ -624,9 +740,21 @@ function nearBottom(){
 new IntersectionObserver(() => nearBottom(), {rootMargin: '800px'}).observe($('#pager'));
 $('#pager').onclick = e => { if(e.target.closest('[data-more]')) more(); };
 
+const LAYOUT_KEY = 'layout';
+let layoutPref = (() => { try { return localStorage.getItem(LAYOUT_KEY) === 'tiles' ? 'tiles' : 'table'; } catch(e){ return 'table'; } })();
+const narrow = matchMedia('(max-width: 860px)');
+const layout = () => narrow.matches ? 'tiles' : layoutPref;
+const paintLayout = () => $('#layout').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.l === layoutPref));
+$('#layout').onclick = e => { const b = e.target.closest('[data-l]'); if(!b || b.dataset.l === layoutPref) return;
+  layoutPref = b.dataset.l; paintLayout();
+  try { localStorage.setItem(LAYOUT_KEY, layoutPref); } catch(e){}
+  load(true); };
+narrow.addEventListener('change', () => { if($('.list').style.display !== 'none') load(true); });
+paintLayout();
+
 $('#results').onclick = e => {
   if(e.target.closest('a')) return;
-  const cardEl = e.target.closest('.card');
+  const cardEl = e.target.closest('[data-id]');
   if(!cardEl) return;
   const btn = e.target.closest('[data-act="fav"]');
   if(!btn) return openAd(cardEl.dataset.id);
@@ -695,9 +823,7 @@ async function openAd(id){
         <tr><td>Поднято</td><td>${esc(a.reseted) || '—'}</td></tr>
         <tr><td>Действует до</td><td>${esc(a.expire) || '—'}</td></tr>
         <tr><td>Просмотров</td><td>${fmt(a.views_total)} (сегодня ${fmt(a.views_today)})</td></tr>
-        <tr><td>Автор</td><td>${a.owner_login
-          ? `${esc(a.owner_login)} — ${esc(a.author_type)||'—'}${a.owner_is_business?', агентство':''}, на сайте с ${short(a.owner_registered)||'—'}`
-          : esc(a.author_type) || (a.owner_is_business ? 'агентство' : 'частное лицо')}</td></tr>
+        ${(a.features || {})['Автор объявления'] ? '' : `<tr><td>Автор объявления</td><td>${esc(a.author_type) || (a.owner_is_business ? 'агентство' : 'частное лицо')}</td></tr>`}
         <tr><td>В базе с</td><td>${esc(a.first_seen)}, последний раз виден ${esc(a.last_seen)}</td></tr>
         ${feats}
       </table>
@@ -793,14 +919,16 @@ async function loadMap(){
   if(!map){
     map = L.map('map', {preferCanvas: true}).setView([47.024, 28.832], 12);
     const esri = 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/';
-    const dark = L.layerGroup([
-      L.tileLayer(esri + 'World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}',
+    const canvas = name => L.layerGroup([
+      L.tileLayer(esri + `World_${name}_Gray_Base/MapServer/tile/{z}/{y}/{x}`,
         {maxZoom: 19, maxNativeZoom: 16, attribution: '© Esri, © OpenStreetMap'}),
-      L.tileLayer(esri + 'World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}', {maxZoom: 19, maxNativeZoom: 16})
-    ]).addTo(map);
-    const light = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+      L.tileLayer(esri + `World_${name}_Gray_Reference/MapServer/tile/{z}/{y}/{x}`, {maxZoom: 19, maxNativeZoom: 16})
+    ]);
+    const dark = canvas('Dark'), grey = canvas('Light');
+    const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
       {maxZoom: 19, attribution: '© OpenStreetMap'});
-    L.control.layers({'тёмная': dark, 'обычная': light}, null, {position: 'topright'}).addTo(map);
+    (matchMedia('(prefers-color-scheme: light)').matches ? grey : dark).addTo(map);
+    L.control.layers({'светлая': grey, 'тёмная': dark, 'обычная': osm}, null, {position: 'topright'}).addTo(map);
   }
   if(mapLayer) mapLayer.remove();
   mapLayer = L.layerGroup().addTo(map);
@@ -1217,6 +1345,7 @@ $('#apply').onclick = () => { state.offset = 0; toggleFilters(false); refresh();
 $('#reset').onclick = () => {
   document.querySelectorAll('aside input').forEach(i => { i.type === 'checkbox' ? i.checked = false : i.value = ''; });
   state.rooms.clear(); state.housing.clear(); state.districts.clear(); state.author = '';
+  CHIP_SETS.forEach(k => state[k].clear());
   toggleFilters(false);
   loadMeta();
 };

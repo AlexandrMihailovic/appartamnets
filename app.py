@@ -122,6 +122,23 @@ DEALS_JOIN = ("\nLEFT JOIN bench b ON b.district = d.district AND b.rooms_n = d.
               "\n                          AND b.stock = d.housing_stock")
 
 
+FEATURE_FILTERS = {"condition": "Состояние квартиры", "building": "Тип здания",
+                   "locality": "Населённый пункт", "parking": "Тип стоянки"}
+AMENITIES = {
+    "heating": ("Автономное отопление", "= 'True'"), "lift": ("Лифт", "= 'True'"),
+    "furnished": ("Меблированная", "= 'True'"), "appliances": ("С бытовой техникой", "= 'True'"),
+    "ready": ("Готова к въезду", "= 'True'"), "ac": ("Кондиционер", "= 'True'"),
+    "parking": ("Парковочное место", "IS NOT NULL"), "baths2": ("Санузел", "IN ('2', '3', '4 и более')"),
+    "balcony": ("Балкон / лоджия", "NOT IN ('Нет', '')"),
+    "electric": ("Электричество", "= 'True'"), "pit": ("Смотровая яма", "= 'True'"),
+    "guard": ("Круглосуточная охрана", "= 'True'"), "cctv": ("Видеонаблюдение", "= 'True'"),
+}
+
+
+def feature(name: str) -> str:
+    return f"json_extract(d.features_json, '$.\"{name}\"')"
+
+
 MAX_FAV_IDS = 500
 
 
@@ -198,6 +215,7 @@ def build_where(conn, params) -> tuple[str, list, str]:
         ("ppm_min", f"{PPM} >= ?"), ("ppm_max", f"{PPM} <= ?"),
         ("area_min", "d.area >= ?"), ("area_max", "d.area <= ?"),
         ("floor_min", "d.floor >= ?"), ("floor_max", "d.floor <= ?"),
+        ("floors_min", "d.floors_total >= ?"), ("floors_max", "d.floors_total <= ?"),
         ("views_min", "d.views_total >= ?"),
         ("photos_min", "d.photos_count >= ?"),
     ]
@@ -229,9 +247,23 @@ def build_where(conn, params) -> tuple[str, list, str]:
 
     author = one(params, "author")
     if author == "private":
-        where.append("COALESCE(d.owner_is_business, 0) = 0 AND COALESCE(d.author_type,'') NOT LIKE '%генст%'")
+        where.append("(d.author_type = 'Частное лицо' OR (COALESCE(d.author_type, '') = '' "
+                     "AND COALESCE(d.owner_is_business, 0) = 0))")
     elif author == "business":
-        where.append("(COALESCE(d.owner_is_business, 0) = 1 OR COALESCE(d.author_type,'') LIKE '%генст%')")
+        where.append("(d.author_type = 'Агентство' OR (COALESCE(d.author_type, '') = '' "
+                     "AND COALESCE(d.owner_is_business, 0) = 1))")
+    elif author == "developer":
+        where.append("d.author_type = 'Застройщик'")
+
+    for key, name in FEATURE_FILTERS.items():
+        values = many(params, key)
+        if values:
+            where.append(f"{feature(name)} IN ({','.join('?' * len(values))})")
+            args.extend(values)
+    for key in many(params, "amen"):
+        if key in AMENITIES:
+            name, test = AMENITIES[key]
+            where.append(f"{feature(name)} {test}")
 
     if one(params, "not_first") == "1":
         where.append("d.floor > 1")
@@ -386,6 +418,11 @@ def api_meta(conn) -> dict:
             "developers": [r["v"] for r in conn.execute(
                 "SELECT d.developer v, COUNT(*) c FROM ad_details d JOIN ads a ON a.id = d.id "
                 "WHERE a.profile = ? AND d.developer <> '' GROUP BY 1 ORDER BY c DESC LIMIT 60", (key,))],
+            **{k: [r["v"] for r in conn.execute(
+                f"SELECT {feature(name)} v, COUNT(*) c FROM ad_details d JOIN ads a ON a.id = d.id "
+                f"WHERE a.profile = ? AND a.gone_at IS NULL AND {feature(name)} <> '' "
+                "GROUP BY 1 HAVING c >= 3 ORDER BY c DESC LIMIT 20", (key,))]
+               for k, name in FEATURE_FILTERS.items()},
         }
     out["runs"] = [dict(r) for r in conn.execute(
         "SELECT * FROM runs ORDER BY id DESC LIMIT 12")]
