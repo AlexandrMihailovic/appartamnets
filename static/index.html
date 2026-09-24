@@ -106,6 +106,15 @@
   aside h3.act::after{content:" ●";font-size:9px;vertical-align:middle}
   .fbadge{display:inline-block;min-width:18px;margin-left:5px;padding:0 5px;border-radius:9px;
           background:var(--accent);color:var(--on-accent);font-size:11px;font-weight:600;text-align:center}
+  footer.site-foot{display:flex;flex-wrap:wrap;align-items:center;gap:6px 16px;margin-top:18px;padding:14px 16px 18px;
+                   border-top:1px solid var(--line);color:var(--dim);font-size:12.5px}
+  footer.site-foot .grow{flex:1}
+  .linkbtn{background:none;border:0;padding:0;color:var(--accent);cursor:pointer;font-size:inherit}
+  .linkbtn:hover{text-decoration:underline}
+  .modal-box.terms{width:min(720px,100%);max-height:88vh;overflow:auto;font-size:13.5px;line-height:1.55}
+  .modal-box.terms h3{font-size:14px;margin:16px 0 4px}
+  .modal-box.terms p,.modal-box.terms ul{margin:0 0 8px}
+  .modal-box.terms ul{padding-left:20px}
   section.list{flex:1;min-width:0}
   .toolbar{display:flex;gap:10px;align-items:center;margin-bottom:10px;flex-wrap:wrap}
   .count{color:var(--dim)}
@@ -279,7 +288,6 @@
     #dbinfo{font-size:11px;order:10}
     #filtersBtn{display:block;order:8}
     #layout{display:none}
-    #contactBtn{order:11}
     #themeBtn{order:8}
 
     main{padding:10px;gap:0}
@@ -346,7 +354,6 @@
   <span class="muted" id="dbinfo"></span>
   <button class="btn" id="filtersBtn">Фильтры</button>
   <button class="btn" id="themeBtn"></button>
-  <button class="btn" id="contactBtn">Связаться</button>
 </header>
 
 <main>
@@ -461,6 +468,69 @@
   </section>
 </main>
 
+<div class="modal" id="terms">
+  <div class="modal-box terms" role="dialog" aria-modal="true" aria-labelledby="termsTitle">
+    <div style="display:flex;align-items:center;gap:10px">
+      <h2 id="termsTitle" class="grow">Условия использования</h2>
+      <button class="btn" type="button" id="termsX" aria-label="закрыть">✕</button>
+    </div>
+    <div class="sub">Редакция от 24 сентября 2026 г.</div>
+
+    <h3>1. О сайте</h3>
+    <p>Сайт — независимый информационно-исследовательский проект о рынке недвижимости Кишинёва:
+      он сводит объявления в одном месте, показывает историю цен, статистику по секторам и динамику стоимости квадратного метра.
+      Сайт не является официальным ресурсом 999.md, не связан с 999.md и компанией Simpals и не действует от их имени.</p>
+
+    <h3>2. Источник данных и права на них</h3>
+    <ul>
+      <li>Объявления, их тексты, фотографии и характеристики взяты из открытых объявлений на 999.md.
+        Все права на эти материалы принадлежат 999.md и авторам объявлений; сайт на них не претендует.</li>
+      <li>Фотографии не копируются на наш сервер — они показываются по ссылкам с серверов 999.md.</li>
+      <li>У каждого объявления есть ссылка на оригинал на 999.md.</li>
+      <li>Собственные материалы сайта — статистика, медианы, история и динамика цен, отметки «выгодно» — получены расчётом из этих данных.</li>
+    </ul>
+
+    <h3>3. Для чего предоставляется информация</h3>
+    <p>Вся информация предоставлена исключительно в ознакомительных и исследовательских целях.
+      Она не является публичной офертой, рекламой, оценкой имущества или рекомендацией совершить сделку.
+      Сайт не агентство недвижимости и не посредник: ничего не продаёт, не сдаёт и не принимает оплату.
+      Чтобы связаться с продавцом, откройте объявление на 999.md.</p>
+
+    <h3>4. Без гарантий</h3>
+    <p>Данные предоставляются «как есть». Объявления могут быть устаревшими, снятыми с публикации или содержать ошибки автора,
+      а расчёты — погрешности. Перед любым решением проверяйте сведения на 999.md и у продавца.
+      Администрация сайта не отвечает за решения, принятые на основе этих данных, и за возможные убытки.</p>
+
+    <h3>5. Личные данные продавцов</h3>
+    <p>Телефоны, имена и логины продавцов на сайте не публикуются — показывается только тип автора: частное лицо, агентство или застройщик.
+      Если в тексте или на фото объявления оказались ваши личные данные, напишите нам — уберём.</p>
+
+    <h3>6. Удаление по запросу</h3>
+    <p>Правообладатель, автор объявления или представитель 999.md может попросить удалить материалы или прекратить их показ.
+      Напишите через форму <button class="linkbtn" type="button" id="termsContact">«Связаться»</button>, указав номер или ссылку объявления
+      и суть просьбы. Запросы рассматриваются в кратчайший срок, обоснованные — исполняются без лишних вопросов.</p>
+
+    <h3>7. Что хранится у посетителя</h3>
+    <ul>
+      <li>Избранное и выбранная тема хранятся только в вашем браузере и никуда не передаются.</li>
+      <li>Рекламные и отслеживающие cookies не используются.</li>
+      <li>Сервер ведёт стандартный журнал запросов (IP-адрес, браузер, адрес страницы) — для защиты от злоупотреблений и статистики посещаемости.</li>
+      <li>Имя и почта из формы «Связаться» используются только для ответа на ваше сообщение.</li>
+    </ul>
+
+    <h3>8. Повторное использование</h3>
+    <p>Тексты и фотографии объявлений можно публиковать повторно только с разрешения их правообладателей.
+      Рассчитанную сайтом статистику можно цитировать со ссылкой на сайт.
+      Не допускается массовая автоматическая выгрузка данных с сайта.</p>
+
+    <h3>9. Изменение условий</h3>
+    <p>Условия могут обновляться; действующая редакция всегда на этой странице.
+      Пользуясь сайтом, вы соглашаетесь с этими условиями.</p>
+
+    <div style="display:flex;margin-top:14px"><div class="grow"></div>
+      <button class="btn primary" type="button" id="termsClose">Понятно</button></div>
+  </div>
+</div>
 <div class="modal" id="contact">
   <div class="modal-box">
     <h2>Связаться</h2>
@@ -483,6 +553,14 @@
 </div>
 
 {{SUMMARY}}
+<footer class="site-foot">
+  <span id="copyYear">© 2026</span>
+  <span>Независимый проект, не связан с 999.md. Данные — из открытых объявлений
+    <a href="https://999.md" target="_blank" rel="noopener">999.md</a>, права на них принадлежат владельцам.</span>
+  <div class="grow"></div>
+  <button class="linkbtn" id="termsBtn">Условия использования</button>
+  <button class="linkbtn" id="contactBtn">Связаться</button>
+</footer>
 
 <div class="shade" id="shade"></div>
 <div class="backdrop" id="backdrop"></div>
@@ -1628,6 +1706,14 @@ async function openContact(){
 }
 function closeContact(){ $('#contact').classList.remove('open'); }
 $('#contactBtn').onclick = openContact;
+function openTerms(){ $('#terms').classList.add('open'); $('#terms .modal-box').scrollTop = 0; }
+function closeTerms(){ $('#terms').classList.remove('open'); }
+$('#termsBtn').onclick = openTerms;
+$('#termsClose').onclick = $('#termsX').onclick = closeTerms;
+$('#terms').onclick = e => { if(e.target.id === 'terms') closeTerms(); };
+$('#termsContact').onclick = () => { closeTerms(); openContact(); };
+addEventListener('keydown', e => { if(e.key === 'Escape') closeTerms(); });
+{ const y = new Date().getFullYear(); if(y > 2026) $('#copyYear').textContent = `© 2026–${y}`; }
 const THEME_KEY = 'theme';
 const isLight = () => document.documentElement.dataset.theme
   ? document.documentElement.dataset.theme === 'light'
