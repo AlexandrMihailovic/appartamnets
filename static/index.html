@@ -116,11 +116,6 @@
   .modal-box.terms p,.modal-box.terms ul{margin:0 0 8px}
   .modal-box.terms ul{padding-left:20px}
   .cad .cadval{font-size:20px;font-weight:600;font-variant-numeric:tabular-nums}
-  .cad .cadsub{color:var(--dim);font-size:12.5px;margin-top:2px}
-  .cad details{margin-top:8px;font-size:12.5px}
-  .cad summary{cursor:pointer;color:var(--accent)}
-  .cad table.data{margin-top:6px;font-size:12.5px}
-  .cad table.data td,.cad table.data th{padding:4px 8px}
   .cad .hint{margin-top:8px}
   section.list{flex:1;min-width:0}
   .toolbar{display:flex;gap:10px;align-items:center;margin-bottom:10px;flex-wrap:wrap}
@@ -996,27 +991,9 @@ async function openAd(id){
 }
 function cadPanel(c){
   if(!c || !c.n) return '';
-  const lei = v => fmt(v) + ' лей';
-  const h = c.house || {};
-  const floor = c.units[0] ? c.units[0].floor : null;
-  const areas = c.units.map(u => u.area);
-  const head = c.n === 1
-    ? `<div class="cadval">${lei(c.value_med)}</div>
-       <div class="cadsub">совпала одна квартира: ap. ${esc(c.units[0].apt || '—')}, ${c.units[0].area} m², ${floor}-й этаж</div>`
-    : `<div class="cadval">≈ ${lei(c.value_med)}</div>
-       <div class="cadsub">от ${lei(c.value_min)} до ${lei(c.value_max)} · подошло ${c.n} кв. на ${floor}-м этаже,
-         ${Math.min(...areas)}–${Math.max(...areas)} m² (допуск ±${Math.round(c.tolerance * 100)} %)</div>`;
-  const house = [h.address, h.year_built && `${h.year_built} г.`, h.floors && `${h.floors} эт.`,
-                 h.walls && `стены: ${h.walls}`, h.condition && `состояние: ${h.condition}`].filter(Boolean).map(esc).join(' · ');
-  const rows = c.units.map(u => `<tr><td>${esc(u.apt || '—')}</td><td>${u.area} m²</td><td>${u.floor}</td>
-    <td class="num">${fmt(u.value_lei)}</td></tr>`).join('');
   return `<div class="panel cad" style="margin-top:14px"><h3>Примерная кадастровая стоимость</h3>
-    ${head}
-    ${c.n > 1 ? `<details><summary>квартиры-кандидаты (${c.n})</summary>
-      <table class="data"><tr><th>кв.</th><th>площадь</th><th>этаж</th><th>оценка, лей</th></tr>${rows}</table></details>` : ''}
-    <div class="hint">${house}</div>
-    <div class="hint">Оценка IPCBI для налогообложения по открытым данным geodata.gov.md${h.updated ? `, обновлено ${esc(h.updated)}` : ''} —
-      это не рыночная цена и обычно заметно ниже её.</div>
+    <div class="cadval">${fmt(c.value_med)} лей</div>
+    <div class="hint">Оценка IPCBI для налогообложения по открытым данным geodata.gov.md</div>
   </div>`;
 }
 function closeAd(){ $('#drawer').classList.remove('open'); $('#backdrop').classList.remove('open'); }
