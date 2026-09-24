@@ -973,6 +973,8 @@ class Handler(BaseHTTPRequestHandler):
     def send_bytes(self, body: bytes, ctype: str, status=200):
         self.send_response(status)
         self.send_header("content-type", ctype)
+        if ctype.startswith("text/html"):
+            self.send_header("x-robots-tag", "index, follow")
         self.send_header("content-length", str(len(body)))
         self.end_headers()
         self.wfile.write(body)
@@ -1032,6 +1034,7 @@ class Handler(BaseHTTPRequestHandler):
     def do_HEAD(self):
         self.send_response(200)
         self.send_header("content-type", "text/html; charset=utf-8")
+        self.send_header("x-robots-tag", "index, follow")
         self.end_headers()
 
     def do_OPTIONS(self):
