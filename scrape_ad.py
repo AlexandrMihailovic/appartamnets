@@ -9,6 +9,7 @@ import sys
 
 import requests
 
+from db import SECTOR_RENAMES
 from scrape_999 import USER_AGENT, make_session
 
 GRAPHQL_URL = "https://999.md/graphql"
@@ -240,7 +241,7 @@ def parse(data: dict, ad_id: str) -> dict:
         "developer": text(1658),
         "region": text(7),
         "city": text(8),
-        "district": text(9),
+        "district": SECTOR_RENAMES.get(text(9), text(9)),
         "street": text(10),
         "house": text(11),
         "lat": point.get("lat") if isinstance(point, dict) else None,
@@ -269,7 +270,9 @@ def parse(data: dict, ad_id: str) -> dict:
             "is_deleted": owner.get("isDeleted"),
             "profile_url": f"https://999.md/ru/profile/{owner.get('login')}" if owner.get("login") else "",
         },
-        "features": {item["title"]: item["text"] for g in groups for item in g["items"] if item["title"]},
+        "features": {item["title"]: SECTOR_RENAMES.get(item["text"], item["text"])
+                     if item["title"] == "Сектор" else item["text"]
+                     for g in groups for item in g["items"] if item["title"]},
         "groups": groups,
     }
     return result

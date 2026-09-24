@@ -35,67 +35,75 @@
     --text:#e6e8ee; --dim:#98a0b3; --accent:#4c9aff; --good:#3ddc97; --bad:#ff6b6b;
     --warn:#ffc55c; --radius:10px;
   }
+  :root{color-scheme:dark}
   *{box-sizing:border-box}
+  *{scrollbar-width:thin;scrollbar-color:#343a47 transparent}
   body{margin:0;background:var(--bg);color:var(--text);
        font:14px/1.45 -apple-system,Segoe UI,Roboto,Ubuntu,sans-serif}
   a{color:var(--accent);text-decoration:none}
   a:hover{text-decoration:underline}
   button,input,select{font:inherit;color:inherit}
   header{position:sticky;top:0;z-index:30;background:var(--panel);border-bottom:1px solid var(--line);
-         padding:10px 16px;display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+         padding:8px 16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
   .brand{font-weight:700;letter-spacing:.4px;margin-right:4px}
   .seg{display:flex;background:var(--panel2);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
-  .seg button, .seg a{background:none;border:0;padding:7px 14px;cursor:pointer;color:var(--dim);white-space:nowrap}
+  .seg button, .seg a{background:none;border:0;padding:6px 11px;cursor:pointer;color:var(--dim);white-space:nowrap}
   .seg a{text-decoration:none}
   .seg button.on, .seg a.on{background:var(--accent);color:#08111f;font-weight:600}
   .seg button .badge, .seg a .badge{margin-left:6px;font-size:11px;opacity:.85}
   .grow{flex:1}
+  #dbinfo{font-size:12px}
   #search{background:var(--panel2);border:1px solid var(--line);border-radius:var(--radius);
-          padding:7px 11px;width:230px}
-  main{display:flex;align-items:flex-start;gap:14px;padding:14px 16px}
-  aside{width:255px;flex:none;position:sticky;top:62px;background:var(--panel);border:1px solid var(--line);
-        border-radius:var(--radius);padding:12px;max-height:calc(100vh - 78px);overflow:auto}
-  aside h3{margin:14px 0 7px;font-size:11px;text-transform:uppercase;letter-spacing:.9px;color:var(--dim)}
+          padding:6px 11px;width:200px}
+  main{display:flex;align-items:flex-start;gap:12px;padding:12px 16px}
+  aside{width:232px;flex:none;background:var(--panel);border:1px solid var(--line);
+        border-radius:var(--radius);padding:10px 11px}
+  aside h3{margin:11px 0 5px;font-size:12px;font-weight:600;color:var(--dim)}
   aside h3:first-child, aside .sr-only + h3{margin-top:0}
   .pair{display:flex;gap:6px}
   .pair input{width:100%}
+  .pair .check{flex:1;white-space:nowrap;margin:6px 0 0}
+  .pair .check input{width:auto}
   aside input[type=number],aside input[type=text],aside select{
-    background:var(--panel2);border:1px solid var(--line);border-radius:7px;padding:6px 8px;width:100%}
-  .chips{display:flex;flex-wrap:wrap;gap:5px}
-  .chip{background:var(--panel2);border:1px solid var(--line);border-radius:20px;padding:3px 11px;
+    background:var(--panel2);border:1px solid var(--line);border-radius:7px;padding:4px 8px;width:100%}
+  .chips{display:flex;flex-wrap:wrap;gap:4px}
+  .chip{background:var(--panel2);border:1px solid var(--line);border-radius:20px;padding:2px 9px;
         cursor:pointer;font-size:12px;color:var(--dim);user-select:none}
   .chip.on{background:var(--accent);border-color:var(--accent);color:#08111f;font-weight:600}
-  .check{display:flex;align-items:center;gap:7px;margin:5px 0;cursor:pointer;color:var(--dim)}
+  .check{display:flex;align-items:center;gap:7px;margin:4px 0;cursor:pointer;color:var(--dim);font-size:13px}
   .check input{accent-color:var(--accent)}
-  .multi{max-height:168px;overflow:auto;border:1px solid var(--line);border-radius:7px;padding:5px;background:var(--panel2)}
   .btn{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:7px 12px;cursor:pointer}
   .btn:hover{border-color:var(--accent)}
   .btn.primary{background:var(--accent);color:#08111f;border-color:var(--accent);font-weight:600}
   section.list{flex:1;min-width:0}
   .toolbar{display:flex;gap:10px;align-items:center;margin-bottom:10px;flex-wrap:wrap}
   .count{color:var(--dim)}
-  .card{display:flex;gap:12px;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
-        padding:10px;margin-bottom:9px;cursor:pointer;transition:border-color .12s}
+  #results{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(430px,100%),1fr));gap:8px}
+  #results > .empty{grid-column:1/-1}
+  .card{display:flex;gap:11px;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+        padding:8px;cursor:pointer;transition:border-color .12s;min-width:0}
   .card:hover{border-color:#3a4457}
-  .card.fav{border-left:3px solid var(--warn)}
-  .thumb{width:132px;height:99px;flex:none;border-radius:7px;object-fit:cover;background:var(--panel2)}
-  .body{flex:1;min-width:0}
-  .row1{display:flex;gap:10px;align-items:baseline}
-  .title{font-weight:600;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .price{font-size:17px;font-weight:700;white-space:nowrap}
-  .ppm{color:var(--dim);font-size:12px;white-space:nowrap}
-  .meta{color:var(--dim);font-size:12.5px;margin-top:4px;display:flex;gap:12px;flex-wrap:wrap}
-  .tags{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap;align-items:center}
-  .tag{font-size:11px;padding:2px 8px;border-radius:20px;background:var(--panel2);color:var(--dim)}
+  .card.fav{box-shadow:inset 3px 0 0 var(--warn)}
+  .thumb{width:118px;height:92px;flex:none;border-radius:7px;object-fit:cover;background:var(--panel2)}
+  .body{flex:1;min-width:0;display:flex;flex-direction:column}
+  .title{font-weight:600;font-size:15px;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;
+         -webkit-box-orient:vertical;overflow:hidden}
+  .pricebar{display:flex;align-items:baseline;gap:9px;flex-wrap:wrap;margin-top:2px}
+  .price{font-size:19px;font-weight:700;white-space:nowrap;letter-spacing:-.2px}
+  .ppm{color:var(--dim);font-size:12.5px;white-space:nowrap}
+  .drop{color:var(--bad);font-size:12.5px;font-weight:600;white-space:nowrap}
+  .gain{color:var(--good);font-size:12.5px;font-weight:600;white-space:nowrap}
+  .meta{color:var(--dim);font-size:12.5px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .foot{display:flex;align-items:center;gap:6px;margin-top:auto;padding-top:5px}
+  .tags{display:flex;gap:5px;flex-wrap:wrap;align-items:center;flex:1;min-width:0;max-height:22px;overflow:hidden}
+  .tag{font-size:11px;padding:1px 7px;border-radius:20px;background:var(--panel2);color:var(--dim);white-space:nowrap}
   .tag.new{background:rgba(61,220,151,.15);color:var(--good)}
   .tag.down{background:rgba(255,107,107,.15);color:var(--bad)}
   .tag.biz{background:rgba(255,197,92,.13);color:var(--warn)}
-  .tag.deal{background:rgba(61,220,151,.18);color:var(--good);font-weight:600}
   .tag.terms{background:rgba(152,160,179,.16);color:#c3cad8}
-  .acts{display:flex;flex-direction:column;gap:6px;justify-content:center}
-  .icon{background:var(--panel2);border:1px solid var(--line);border-radius:7px;width:32px;height:29px;
-        cursor:pointer;color:var(--dim);line-height:1}
-  .icon.on{color:var(--warn);border-color:var(--warn)}
+  .btn.star{font-size:12px;padding:3px 8px;color:var(--dim);line-height:1.2;flex:none}
+  .btn.star.on{color:var(--warn);border-color:var(--warn)}
+  .btn.open{font-size:12px;padding:3px 9px;color:var(--text);text-decoration:none;white-space:nowrap;flex:none}
   .down{color:var(--bad)} .up{color:var(--good)}
   .muted{color:var(--dim)}
   .drawer{position:fixed;inset:0 0 0 auto;width:min(760px,100vw);background:var(--panel);
@@ -194,21 +202,19 @@
     #contactBtn{order:11}
 
     main{padding:10px;gap:0}
-    aside{position:fixed;left:0;top:0;bottom:0;width:min(320px,88vw);max-height:none;
+    aside{position:fixed;left:0;top:0;bottom:0;width:min(320px,88vw);overflow:auto;
           border-radius:0;border-left:0;border-top:0;border-bottom:0;z-index:1250;
           transform:translateX(-100%);transition:transform .2s ease}
     aside.open{transform:none}
     section.list{width:100%}
 
-    .thumb{width:96px;height:78px}
-    .card{padding:8px;gap:9px}
-    .price{font-size:15px}
-    .title{white-space:normal;overflow:visible;font-size:14px;line-height:1.3}
-    .row1{flex-direction:column;align-items:flex-start;gap:2px}
-    .price{font-size:16px}
-    .meta{font-size:12px;gap:8px;margin-top:3px}
-    .acts{gap:5px}
-    .icon{width:30px;height:28px}
+    .thumb{width:92px;height:80px}
+    .card{padding:7px;gap:9px}
+    .title{font-size:14px}
+    .price{font-size:17px}
+    .meta{font-size:12px}
+    .tags{display:none}
+    .foot{justify-content:flex-end}
 
     .toolbar{gap:6px}
     .toolbar select{max-width:46vw}
@@ -275,14 +281,14 @@
       <div class="pair"><input type="number" id="area_min" placeholder="от"><input type="number" id="area_max" placeholder="до"></div>
       <h3>Этаж</h3>
       <div class="pair"><input type="number" id="floor_min" placeholder="от"><input type="number" id="floor_max" placeholder="до"></div>
-      <label class="check"><input type="checkbox" id="not_first"> не первый этаж</label>
-      <label class="check"><input type="checkbox" id="not_last"> не последний этаж</label>
+      <div class="pair"><label class="check"><input type="checkbox" id="not_first"> не первый</label>
+      <label class="check"><input type="checkbox" id="not_last"> не последний</label></div>
       <h3>Жилой фонд</h3>
       <div class="chips" id="housing"></div>
     </div>
 
     <h3>Сектор</h3>
-    <div class="multi" id="districts"></div>
+    <div class="chips" id="districts"></div>
 
     <div class="deals-only">
       <h3>Правила выгодных</h3>
@@ -308,15 +314,11 @@
       <span class="chip" data-v="business">агентство</span>
     </div>
 
-    <h3>Прочее</h3>
-    <label class="check"><input type="checkbox" id="has_photo"> только с фото</label>
-    <label class="check"><input type="checkbox" id="show_hidden"> показывать скрытые</label>
-    <h3>Размещено не позже, дней</h3>
-    <input type="number" id="age_max" placeholder="напр. 14">
-    <h3>Просмотров не меньше</h3>
-    <input type="number" id="views_min" placeholder="напр. 500">
+    <label class="check" style="margin-top:9px"><input type="checkbox" id="has_photo"> только с фото</label>
+    <h3>Свежесть и просмотры</h3>
+    <div class="pair"><input type="number" id="age_max" placeholder="≤ дней" title="размещено не позже, дней"><input type="number" id="views_min" placeholder="≥ просм." title="просмотров не меньше"></div>
 
-    <div style="display:flex;gap:8px;margin-top:16px">
+    <div style="display:flex;gap:8px;margin-top:12px">
       <button class="btn primary grow" id="apply">Применить</button>
       <button class="btn" id="reset">Сброс</button>
     </div>
@@ -404,6 +406,13 @@ const state = {
 const fmt = n => n == null ? '—' : Math.round(n).toLocaleString('ru-RU').replace(/ /g,' ');
 const esc = s => (s ?? '').toString().replace(/[<>&"]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]));
 const cur = c => c === 'EUR' ? '€' : esc(c);
+const FAV_KEY = 'favorites';
+const favs = new Set((() => { try { return JSON.parse(localStorage.getItem(FAV_KEY)) || []; } catch(e){ return []; } })().map(String));
+function toggleFav(id){
+  favs.has(id) ? favs.delete(id) : favs.add(id);
+  try { localStorage.setItem(FAV_KEY, JSON.stringify([...favs])); } catch(e){}
+  return favs.has(id);
+}
 const short = s => (s || '').slice(0, 10);
 const days = s => { if(!s) return null;
   const d = new Date(s.replace(' ','T')); const now = new Date();
@@ -440,7 +449,8 @@ async function loadMeta(){
     loadMeta(); };
   const p = m.profiles.find(x => x.key === state.profile) || {};
   const tabs = [['deals','Выгодные',p.deals],['new',`Новые`,p.recent7],['down','Подешевели',p.down],['all','Все',p.count],
-                ['fav','Избранное',''],['hidden','Скрытые',''],['stats','Статистика',''],['trends','Динамика','']];
+                ['fav','Избранное',''],['stats','Статистика',''],['trends','Динамика','']];
+  if(state.tab === 'hidden') state.tab = 'all';
   $('#tabs').innerHTML = tabs.map(([k,t,b]) =>
     `<a href="${tabHref(state.profile, k)}" data-t="${k}" class="${k===state.tab?'on':''}">${t}${b!==''&&b!=null?`<span class="badge">${b}</span>`:''}</a>`).join('');
   $('#tabs').onclick = e => { const b = e.target.closest('[data-t]'); if(!b) return; e.preventDefault();
@@ -452,7 +462,7 @@ async function loadMeta(){
     el.style.display = (state.tab === 'deals' && isApt) ? '' : 'none');
   const c = m.counts[state.profile] || {districts:[],housing:[],developers:[]};
   $('#districts').innerHTML = c.districts.map(d =>
-    `<label class="check"><input type="checkbox" data-d="${esc(d)}" ${state.districts.has(d)?'checked':''}> ${esc(d)}</label>`).join('') || '<span class="muted">нет данных</span>';
+    `<span class="chip ${state.districts.has(d)?'on':''}" data-d="${esc(d)}">${esc(d)}</span>`).join('') || '<span class="muted">нет данных</span>';
   $('#housing').innerHTML = c.housing.map(h =>
     `<span class="chip ${state.housing.has(h)?'on':''}" data-h="${esc(h)}">${esc(h)}</span>`).join('');
   $('#rooms').innerHTML = [['0','студия'],['1','1'],['2','2'],['3','3'],['4','4'],['5','5+']]
@@ -461,8 +471,7 @@ async function loadMeta(){
 
   $('#housing').onclick = e => toggle(e, 'h', state.housing);
   $('#rooms').onclick   = e => toggle(e, 'r', state.rooms);
-  $('#districts').onchange = e => { const cb = e.target;
-    cb.checked ? state.districts.add(cb.dataset.d) : state.districts.delete(cb.dataset.d); };
+  $('#districts').onclick = e => toggle(e, 'd', state.districts);
   $('#author').onclick = e => { const chip = e.target.closest('.chip'); if(!chip) return;
     state.author = chip.dataset.v;
     $('#author').querySelectorAll('.chip').forEach(c2 => c2.classList.toggle('on', c2 === chip)); };
@@ -509,16 +518,16 @@ function query(){
   if($('#not_first').checked) q.set('not_first','1');
   if($('#not_last').checked) q.set('not_last','1');
   if($('#has_photo').checked) q.set('has_photo','1');
-  if($('#show_hidden').checked) q.set('show_hidden','1');
   if($('#show_terms').checked) q.set('show_terms','1');
   if(state.rooms.size) q.set('rooms', [...state.rooms].join(','));
   if(state.housing.size) q.set('housing', [...state.housing].join(','));
   if(state.districts.size) q.set('districts', [...state.districts].join(','));
   if(state.author) q.set('author', state.author);
+  if(state.tab === 'fav') q.set('ids', [...favs].join(',') || '0');
   return q;
 }
 
-function spark(hist, w = 108, h = 26){
+function spark(hist, w = 64, h = 18){
   if(!hist || hist.length < 2) return '';
   const ys = hist.map(p => p[1]);
   const min = Math.min(...ys), max = Math.max(...ys), span = (max - min) || 1;
@@ -535,9 +544,6 @@ function card(a){
   const tags = [];
   if(a.is_new) tags.push('<span class="tag new">новое в базе</span>');
   if(age != null && age <= 3) tags.push(`<span class="tag new">размещено ${age === 0 ? 'сегодня' : age + ' дн. назад'}</span>`);
-  if(dropAbs) tags.push(`<span class="tag down">↓ ${fmt(Math.abs(dropAbs))} € (${dropPct.toFixed(1)}%)</span>`);
-  if(a.discount != null) tags.push(`<span class="tag deal">выгода −${a.discount.toFixed(0)}% к медиане `
-    + `${esc(a.district)} · ${a.rooms_n}к (${fmt(a.med_ppm)} €/m², выборка ${a.pool_n})</span>`);
   if(a.terms_flag) tags.push('<span class="tag terms">рассрочка / не под ключ</span>');
   if(a.owner_is_business) tags.push('<span class="tag biz">агентство</span>');
   if(a.housing_stock) tags.push(`<span class="tag">${esc(a.housing_stock)}</span>`);
@@ -549,70 +555,86 @@ function card(a){
        a.floor ? `${a.floor}/${a.floors_total || '?'} эт.` : null].filter(Boolean).join(' · ')
     : '';
 
-  return `<div class="card ${a.favorite?'fav':''}" data-id="${a.id}">
+  const fav = favs.has(String(a.id));
+  const place = [geom, a.district, [a.street, a.house].filter(Boolean).join(' ')].filter(Boolean).join(' · ');
+  const seen = [age != null && age > 3 ? `${age} дн. на сайте` : null,
+                a.views_total ? `${fmt(a.views_total)} просм.` : null].filter(Boolean).join(', ');
+  return `<div class="card ${fav?'fav':''}" data-id="${a.id}">
     <img class="thumb" loading="lazy" alt="${esc(a.title)}" src="${a.photos[0] ? esc(a.photos[0].replace('900x900','320x240')) : ''}" onerror="this.style.visibility='hidden'">
     <div class="body">
-      <div class="row1">
-        <div class="title">${esc(a.title)}</div>
-        <div class="price">${fmt(a.price)} ${cur(a.currency)}</div>
-      </div>
-      <div class="meta">
-        ${geom ? `<span>${geom}</span>` : ''}
+      <div class="title">${esc(a.title)}</div>
+      <div class="pricebar">
+        <span class="price">${fmt(a.price)} ${cur(a.currency)}</span>
         ${a.ppm ? `<span class="ppm">${fmt(a.ppm)} €/m²</span>` : ''}
-        ${a.district ? `<span>${esc(a.district)}</span>` : ''}
-        ${a.street ? `<span>${esc(a.street)} ${esc(a.house||'')}</span>` : ''}
+        ${a.discount != null ? `<span class="gain" title="медиана: ${esc(a.district)}, ${a.rooms_n}-комн., ${fmt(a.med_ppm)} €/m², выборка ${a.pool_n}">−${a.discount.toFixed(0)}% к медиане</span>` : ''}
+        ${dropAbs ? `<span class="drop">↓ ${fmt(Math.abs(dropAbs))} € (${dropPct.toFixed(1)}%)</span>` : ''}
       </div>
-      <div class="meta">
-        <span>размещено ${short(a.posted) || '—'}${age!=null?` (${age} дн.)`:''}</span>
-        <span>просмотров ${fmt(a.views_total)}</span>
-        <span>фото ${a.photos_count ?? 0}</span>
-        ${a.phones ? `<span>${esc(a.phones)}</span>` : ''}
+      <div class="meta" title="${esc(place)}">${esc(place)}${seen ? ` <span class="muted">· ${seen}</span>` : ''}</div>
+      <div class="foot">
+        <div class="tags">${tags.join('')}${spark(a.hist)}</div>
+        <button class="btn star ${fav?'on':''}" data-act="fav" title="${fav?'убрать из избранного':'в избранное'}">★</button>
+        <a class="btn open" href="https://999.md/ru/${a.id}" target="_blank" rel="noopener">открыть на 999.md</a>
       </div>
-      <div class="tags">${tags.join('')}${spark(a.hist)}</div>
-    </div>
-    <div class="acts">
-      <button class="icon ${a.favorite?'on':''}" data-act="fav" title="в избранное">★</button>
-      <button class="icon" data-act="hide" title="скрыть">✕</button>
-      <a class="icon" style="display:grid;place-items:center" href="https://999.md/ru/${a.id}" target="_blank" title="открыть на 999.md">↗</a>
     </div>
   </div>`;
 }
 
-async function load(){
+const AUTO_PAGES = 3;
+const feed = {total: 0, pages: 0, busy: false, token: 0};
+
+async function load(keepScroll = false){
+  feed.token++; feed.busy = false; feed.pages = 0; feed.total = 0; state.offset = 0;
+  if(!keepScroll && scrollY > 0) scrollTo({top: 0});
   $('#results').innerHTML = '<div class="empty">загрузка…</div>';
-  const data = await (await fetch('/api/ads?' + query())).json();
-  if(data.error){ $('#results').innerHTML = `<div class="empty">${esc(data.error)}</div>`; return; }
-  $('#count').textContent = `найдено ${data.total}` + (data.total > state.limit
-    ? ` · показаны ${state.offset+1}–${Math.min(state.offset+state.limit, data.total)}` : '');
-  $('#results').innerHTML = data.items.length ? data.items.map(card).join('')
-    : '<div class="empty">Ничего не найдено. Ослабьте фильтры.</div>';
-  const pages = Math.ceil(data.total / state.limit);
-  const page = Math.floor(state.offset / state.limit) + 1;
-  $('#pager').innerHTML = pages > 1
-    ? `<button class="btn" ${page<=1?'disabled':''} data-go="${state.offset-state.limit}">← назад</button>
-       <span class="muted" style="padding:7px">стр. ${page} из ${pages}</span>
-       <button class="btn" ${page>=pages?'disabled':''} data-go="${state.offset+state.limit}">вперёд →</button>` : '';
+  $('#pager').innerHTML = '';
+  await more();
 }
 
-$('#pager').onclick = e => { const b = e.target.closest('[data-go]'); if(!b) return;
-  state.offset = Math.max(0, +b.dataset.go); load(); window.scrollTo({top:0,behavior:'smooth'}); };
-
-$('#results').onclick = async e => {
-  const btn = e.target.closest('[data-act]');
-  const cardEl = e.target.closest('.card');
-  if(!cardEl) return;
-  const id = cardEl.dataset.id;
-  if(btn){
-    e.stopPropagation();
-    const body = btn.dataset.act === 'fav'
-      ? {id, favorite: btn.classList.contains('on') ? 0 : 1}
-      : {id, hidden: 1};
-    const r = await (await fetch('/api/flag', {method:'POST', body: JSON.stringify(body)})).json();
-    if(btn.dataset.act === 'fav'){ btn.classList.toggle('on', !!r.favorite); cardEl.classList.toggle('fav', !!r.favorite); }
-    else cardEl.remove();
+async function more(){
+  if(feed.busy) return;
+  const token = feed.token;
+  feed.busy = true;
+  let data;
+  try{ data = await (await fetch('/api/ads?' + query())).json(); }
+  catch(err){ data = {error: 'сеть недоступна, попробуйте ещё раз'}; }
+  if(token !== feed.token) return;
+  feed.busy = false;
+  if(data.error){
+    if(!feed.pages) $('#results').innerHTML = `<div class="empty">${esc(data.error)}</div>`;
+    else $('#pager').innerHTML = `<button class="btn" data-more>${esc(data.error)} · повторить</button>`;
     return;
   }
-  openAd(id);
+  if(!feed.pages) $('#results').innerHTML = data.items.length ? ''
+    : '<div class="empty">Ничего не найдено. Ослабьте фильтры.</div>';
+  $('#results').insertAdjacentHTML('beforeend', data.items.map(card).join(''));
+  feed.pages++; feed.total = data.total; state.offset += data.items.length;
+  const left = feed.total - state.offset;
+  $('#count').textContent = `найдено ${fmt(feed.total)}` + (left > 0 ? ` · показано ${fmt(state.offset)}` : '');
+  $('#pager').innerHTML = left <= 0 ? ''
+    : feed.pages < AUTO_PAGES ? '<span class="muted">загружаю ещё…</span>'
+    : `<button class="btn" data-more>Показать ещё ${Math.min(state.limit, left)} · осталось ${fmt(left)}</button>`;
+  nearBottom();
+}
+
+function nearBottom(){
+  const p = $('#pager');
+  if(!p.offsetParent || feed.busy || !feed.pages || feed.pages >= AUTO_PAGES || state.offset >= feed.total) return;
+  if(p.getBoundingClientRect().top < innerHeight + 800) more();
+}
+new IntersectionObserver(() => nearBottom(), {rootMargin: '800px'}).observe($('#pager'));
+$('#pager').onclick = e => { if(e.target.closest('[data-more]')) more(); };
+
+$('#results').onclick = e => {
+  if(e.target.closest('a')) return;
+  const cardEl = e.target.closest('.card');
+  if(!cardEl) return;
+  const btn = e.target.closest('[data-act="fav"]');
+  if(!btn) return openAd(cardEl.dataset.id);
+  const on = toggleFav(cardEl.dataset.id);
+  if(!on && state.tab === 'fav') return load(true);
+  btn.classList.toggle('on', on);
+  btn.title = on ? 'убрать из избранного' : 'в избранное';
+  cardEl.classList.toggle('fav', on);
 };
 
 function chart(history, w = 660, h = 190){
@@ -650,7 +672,7 @@ async function openAd(id){
   $('#drawer').innerHTML = `
     <div style="display:flex;gap:10px;align-items:center;margin-bottom:12px">
       <button class="btn" onclick="closeAd()">← закрыть</button>
-      <a class="btn" href="https://999.md/ru/${a.id}" target="_blank">открыть на 999.md ↗</a>
+      <a class="btn" href="https://999.md/ru/${a.id}" target="_blank" rel="noopener">открыть на 999.md ↗</a>
       ${a.lat ? `<a class="btn" href="https://www.google.com/maps?q=${a.lat},${a.lon}" target="_blank">на карте ↗</a>` : ''}
       <div class="grow"></div>
       <span class="muted">id ${a.id}</span>
@@ -789,7 +811,7 @@ async function loadMap(){
     const [lat, lon] = key.split(',').map(Number);
     const vs = arr.map(value).filter(v => v != null).sort((a, b) => a - b);
     const med = vs.length ? vs[Math.floor(vs.length / 2)] : null;
-    const fav = arr.some(p => p.favorite);
+    const fav = arr.some(p => favs.has(String(p.id)));
     const marker = L.circleMarker([lat, lon], {
       radius: 4.5 + Math.min(Math.sqrt(arr.length) * 1.9, 9),
       color: fav ? '#ffc55c' : '#0b0d12', weight: fav ? 2 : 1,

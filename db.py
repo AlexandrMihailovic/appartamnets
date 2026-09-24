@@ -131,6 +131,9 @@ def now() -> str:
 MIGRATIONS = [("ad_details", "terms_flag", "INTEGER DEFAULT 0")]
 
 
+SECTOR_RENAMES = {"Окраина": "Пригород"}
+
+
 def connect(path: str = DB_PATH) -> sqlite3.Connection:
     conn = sqlite3.connect(path, timeout=30)
     conn.row_factory = sqlite3.Row
@@ -140,6 +143,12 @@ def connect(path: str = DB_PATH) -> sqlite3.Connection:
         have = {r["name"] for r in conn.execute(f"PRAGMA table_info({table})")}
         if column not in have:
             conn.execute(f"ALTER TABLE {table} ADD COLUMN {column} {decl}")
+            conn.commit()
+    for old, new in SECTOR_RENAMES.items():
+        if conn.execute("SELECT 1 FROM ad_details WHERE district = ? LIMIT 1", (old,)).fetchone():
+            conn.execute(
+                "UPDATE ad_details SET district = ?, features_json = replace(features_json, ?, ?) "
+                "WHERE district = ?", (new, f'"Сектор": "{old}"', f'"Сектор": "{new}"', old))
             conn.commit()
     return conn
 

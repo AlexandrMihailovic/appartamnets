@@ -122,6 +122,9 @@ DEALS_JOIN = ("\nLEFT JOIN bench b ON b.district = d.district AND b.rooms_n = d.
               "\n                          AND b.stock = d.housing_stock")
 
 
+MAX_FAV_IDS = 500
+
+
 def one(params, key, default=None):
     value = params.get(key, [None])[0]
     return default if value in (None, "") else value
@@ -169,7 +172,9 @@ def build_where(conn, params) -> tuple[str, list, str]:
     elif tab == "down":
         where.append(f"({DROP_ABS} < 0 OR (a.old_price IS NOT NULL AND a.old_price > a.price))")
     elif tab == "fav":
-        where.append("COALESCE(f.favorite, 0) = 1")
+        ids = many(params, "ids")[:MAX_FAV_IDS]
+        where.append(f"a.id IN ({','.join('?' * len(ids))})" if ids else "0")
+        args.extend(ids)
     elif tab == "deals":
         min_area = num(params, "min_area")
         min_area = 30 if min_area is None else min_area
@@ -707,7 +712,7 @@ _page_cache: dict = {}
 
 SECTORS = {"Ботаника": "botanica", "Центр": "centru", "Чокана": "ciocana", "Буюканы": "buiucani",
            "Рышкановка": "riscani", "Телецентр": "telecentru", "Старая Почта": "posta-veche",
-           "Скулянка": "sculeanca", "Аэропорт": "aeroport", "Окраина": "okraina"}
+           "Скулянка": "sculeanca", "Аэропорт": "aeroport", "Пригород": "suburbii"}
 SECTOR_BY_SLUG = {slug: name for name, slug in SECTORS.items()}
 SECTIONS = (("/", "Квартиры"), ("/garages", "Гаражи и парковки"),
             ("/stats", "Статистика"), ("/trends", "Динамика цен"))
