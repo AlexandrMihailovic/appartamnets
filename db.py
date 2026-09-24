@@ -159,6 +159,16 @@ CREATE TABLE IF NOT EXISTS cad_units (
 );
 CREATE INDEX IF NOT EXISTS cad_u_building ON cad_units(building, floor);
 
+CREATE TABLE IF NOT EXISTS bench_cache (
+    min_area REAL NOT NULL,
+    district TEXT,
+    rooms_n  INTEGER,
+    stock    TEXT,
+    med_ppm  REAL,
+    pool_n   INTEGER
+);
+CREATE INDEX IF NOT EXISTS bench_cache_key ON bench_cache(min_area, district, rooms_n, stock);
+
 CREATE TABLE IF NOT EXISTS cad_points (
     point      TEXT PRIMARY KEY,
     buildings  TEXT,

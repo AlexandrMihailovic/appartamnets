@@ -122,6 +122,34 @@ DEALS_JOIN = ("\nLEFT JOIN bench b ON b.district = d.district AND b.rooms_n = d.
               "\n                          AND b.stock = d.housing_stock")
 
 
+BENCH_TTL = 300
+_bench_lock = threading.Lock()
+_bench_built: dict = {}
+
+
+def bench_join(conn, min_area=30) -> str:
+    min_area = float(min_area)
+    with _bench_lock:
+        if time.time() - _bench_built.get(min_area, 0) > BENCH_TTL:
+            conn.execute("DELETE FROM bench_cache WHERE min_area = ?", (min_area,))
+            conn.execute(f"{BENCH_CTE} INSERT INTO bench_cache (min_area, district, rooms_n, stock, med_ppm, pool_n) "
+                         "SELECT ?, district, rooms_n, stock, med_ppm, pool_n FROM bench", (min_area, min_area))
+            conn.commit()
+            _bench_built[min_area] = time.time()
+    return (f"\nLEFT JOIN bench_cache b ON b.min_area = {min_area!r} AND b.district = d.district"
+            "\n                          AND b.rooms_n = d.rooms_n AND b.stock = d.housing_stock")
+
+
+SUSPECT_PCT = 45
+SUSPECT_POOL = 8
+VS_MED = f"CASE WHEN b.pool_n >= {SUSPECT_POOL} THEN ({PPM} - b.med_ppm) * 100.0 / b.med_ppm END"
+SUSPECT = (f"(b.pool_n >= {SUSPECT_POOL} AND COALESCE(d.terms_flag, 0) = 0 "
+           f"AND {PPM} < b.med_ppm * {1 - SUSPECT_PCT / 100})")
+BENCH_COLS = DEALS_COLS + f""",
+      {VS_MED} AS vs_med,
+      CASE WHEN {SUSPECT} THEN 1 ELSE 0 END AS suspect"""
+
+
 FEATURE_FILTERS = {"condition": "Состояние квартиры", "building": "Тип здания",
                    "locality": "Населённый пункт", "parking": "Тип стоянки"}
 AMENITIES = {
@@ -271,6 +299,8 @@ def build_where(conn, params) -> tuple[str, list, str]:
         where.append("(d.floors_total IS NULL OR d.floor < d.floors_total)")
     if one(params, "has_photo") == "1":
         where.append("COALESCE(d.photos_count, 0) > 0")
+    if one(params, "hide_suspect") == "1":
+        where.append(f"NOT COALESCE({SUSPECT}, 0)")
 
     age = num(params, "age_max")
     if age is not None:
@@ -298,13 +328,9 @@ def api_ads(conn, params) -> dict:
     limit = max(1, min(int(num(params, "limit") or 100), 500))
     offset = max(0, int(num(params, "offset") or 0))
 
-    if deals:
-        min_area = num(params, "min_area")
-        head = BENCH_CTE
-        pre = [30 if min_area is None else min_area]
-        cols, joins = SELECT_COLS + DEALS_COLS, FROM_JOINS + DEALS_JOIN
-    else:
-        head, pre, cols, joins = "", [], SELECT_COLS, FROM_JOINS
+    min_area = num(params, "min_area") if deals else None
+    head, pre = "", []
+    cols, joins = SELECT_COLS + BENCH_COLS, FROM_JOINS + bench_join(conn, 30 if min_area is None else min_area)
 
     total = conn.execute(
         f"{head} SELECT COUNT(*) c FROM (SELECT a.id {joins} WHERE {where})", pre + args
@@ -338,13 +364,9 @@ def api_map(conn, params) -> dict:
     where += " AND a.lat IS NOT NULL AND a.lon IS NOT NULL"
     limit = max(1, min(int(num(params, "limit") or 12000), 20000))
 
-    if deals:
-        min_area = num(params, "min_area")
-        head = BENCH_CTE
-        pre = [30 if min_area is None else min_area]
-        cols, joins = MAP_COLS + DEALS_COLS, FROM_JOINS + DEALS_JOIN
-    else:
-        head, pre, cols, joins = "", [], MAP_COLS, FROM_JOINS
+    min_area = num(params, "min_area") if deals else None
+    head, pre = "", []
+    cols, joins = MAP_COLS + BENCH_COLS, FROM_JOINS + bench_join(conn, 30 if min_area is None else min_area)
 
     total = conn.execute(
         f"{head} SELECT COUNT(*) c FROM (SELECT a.id {joins} WHERE {where})", pre + args
@@ -358,7 +380,8 @@ def api_map(conn, params) -> dict:
 
 
 def api_ad(conn, ad_id: str) -> dict:
-    row = conn.execute(f"{SELECT} WHERE a.id = ?", (ad_id,)).fetchone()
+    row = conn.execute(f"{SELECT_COLS}{BENCH_COLS} {FROM_JOINS}{bench_join(conn)} WHERE a.id = ?",
+                       (ad_id,)).fetchone()
     if not row:
         return {"error": "не найдено"}
     item = dict(row)
@@ -413,14 +436,14 @@ def api_meta(conn) -> dict:
         deals = 0
         if key == "apartments":
             deals = conn.execute(
-                f"""{BENCH_CTE} SELECT COUNT(*) c FROM (
-                        SELECT a.id {FROM_JOINS}{DEALS_JOIN}
+                f"""SELECT COUNT(*) c FROM (
+                        SELECT a.id {FROM_JOINS}{bench_join(conn)}
                         WHERE a.profile = ? AND a.gone_at IS NULL
                           AND {DEALS_RULES.replace(":min_area", "30")}
                           AND COALESCE(d.terms_flag, 0) = 0
                           AND b.pool_n >= 8
                           AND (b.med_ppm - {PPM}) * 100.0 / b.med_ppm BETWEEN 15 AND 60)""",
-                (30, key)).fetchone()["c"]
+                (key,)).fetchone()["c"]
         out["profiles"].append({
             "key": key, "title": profile["title"], "count": row["c"],
             "fresh": row["fresh"] or 0, "down": down, "recent7": recent, "baseline": base,
@@ -547,7 +570,7 @@ def api_trends(conn, params) -> dict:
     sql = f"""
         SELECT substr(d.posted, 1, 7) AS m, {expr} AS g,
                a.price AS price, d.area AS area, {PPM} AS ppm
-        {FROM_JOINS}
+        {FROM_JOINS}{bench_join(conn)}
         WHERE {where}
           AND d.posted IS NOT NULL AND d.posted <> ''
           AND a.price > 0

@@ -135,6 +135,14 @@
   .ppm{color:var(--dim);font-size:12.5px;white-space:nowrap}
   .drop{color:var(--bad);font-size:12.5px;font-weight:600;white-space:nowrap}
   .gain{color:var(--good);font-size:12.5px;font-weight:600;white-space:nowrap}
+  .vsmed{font-size:12.5px;white-space:nowrap;font-variant-numeric:tabular-nums;color:var(--dim)}
+  .vsmed.lo{color:var(--good);font-weight:600}
+  .suspect{display:inline-block;font-size:11.5px;font-weight:600;padding:1px 7px;border-radius:20px;white-space:nowrap;
+           background:color-mix(in srgb,var(--bad) 16%,transparent);color:var(--bad);cursor:help}
+  tr.ad.sus td:first-child{box-shadow:inset 3px 0 0 var(--bad)}
+  .card.sus{box-shadow:inset 3px 0 0 var(--bad)}
+  .warnbox{margin:0 0 12px;padding:9px 12px;border-radius:8px;font-size:13px;
+           background:color-mix(in srgb,var(--bad) 12%,transparent);color:var(--text);border:1px solid color-mix(in srgb,var(--bad) 40%,transparent)}
   .meta{color:var(--dim);font-size:12.5px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .foot{display:flex;align-items:center;gap:6px;margin-top:auto;padding-top:5px}
   .tags{display:flex;gap:5px;flex-wrap:wrap;align-items:center;flex:1;min-width:0;max-height:22px;overflow:hidden}
@@ -417,6 +425,7 @@
     </div>
 
     <label class="check" style="margin-top:9px"><input type="checkbox" id="has_photo"> только с фото</label>
+    <label class="check apt-only" title="дешевле медианы по сектору на 45 % и больше"><input type="checkbox" id="hide_suspect"> скрыть подозрительно дешёвые</label>
     <h3>Свежесть и просмотры</h3>
     <div class="pair"><input type="number" id="age_max" placeholder="≤ дней" title="размещено не позже, дней"><input type="number" id="views_min" placeholder="≥ просм." title="просмотров не меньше"></div>
 
@@ -752,6 +761,7 @@ function query(){
   if($('#not_first').checked) q.set('not_first','1');
   if($('#not_last').checked) q.set('not_last','1');
   if($('#has_photo').checked) q.set('has_photo','1');
+  if($('#hide_suspect').checked && state.profile === 'apartments') q.set('hide_suspect','1');
   if($('#show_terms').checked) q.set('show_terms','1');
   if(state.rooms.size) q.set('rooms', [...state.rooms].join(','));
   if(state.housing.size) q.set('housing', [...state.housing].join(','));
@@ -771,6 +781,13 @@ function spark(hist, w = 64, h = 18){
   return `<svg width="${w}" height="${h}"><polyline points="${pts}" fill="none" stroke="${color}" stroke-width="1.8"/></svg>`;
 }
 
+const SUSPECT_HINT = 'Цена за m² ниже медианы по сектору на 45 % и больше. Так часто выглядят объявления-приманки агентств: лота по такой цене может не быть.';
+function vsMed(a){
+  if(a.vs_med == null) return '';
+  const v = Math.round(a.vs_med);
+  const title = `медиана: ${a.district}, ${a.rooms_n === 0 ? 'студия' : a.rooms_n + '-комн.'}, ${a.housing_stock}: ${fmt(a.med_ppm)} €/m², выборка ${a.pool_n}`;
+  return `<span class="vsmed ${v <= -10 ? 'lo' : ''}" title="${esc(title)}">${v > 0 ? '+' : v < 0 ? '−' : ''}${Math.abs(v)}% к медиане</span>`;
+}
 function facts(a){
   const dropAbs = a.drop_abs ?? (a.old_price && a.old_price > a.price ? a.price - a.old_price : null);
   const dropBase = a.prev_price ?? a.old_price;
@@ -790,8 +807,9 @@ function facts(a){
     addr: [a.district, [a.street, a.house].filter(Boolean).join(' ')].filter(Boolean).join(' · '),
     seen: [age != null && age > 3 ? `${age} дн. на сайте` : null,
            a.views_total ? `${fmt(a.views_total)} просм.` : null].filter(Boolean).join(', '),
-    change: (a.discount != null ? `<span class="gain" title="медиана: ${esc(a.district)}, ${a.rooms_n}-комн., ${fmt(a.med_ppm)} €/m², выборка ${a.pool_n}">−${a.discount.toFixed(0)}% к медиане</span>` : '')
-          + (dropAbs ? `<span class="drop">↓ ${fmt(Math.abs(dropAbs))} € (${dropPct.toFixed(1)}%)</span>` : ''),
+    vsmed: vsMed(a),
+    suspect: a.suspect ? `<span class="suspect" title="${SUSPECT_HINT}">⚠ подозрительно дёшево</span>` : '',
+    change: (dropAbs ? `<span class="drop">↓ ${fmt(Math.abs(dropAbs))} € (${dropPct.toFixed(1)}%)</span>` : ''),
     actions: `<button class="btn star ${fav?'on':''}" data-act="fav" title="${fav?'убрать из избранного':'в избранное'}">★</button>`
            + `<a class="btn open" href="https://999.md/ru/${a.id}" target="_blank" rel="noopener"><span class="long">открыть на </span>999.md</a>`,
   };
@@ -805,14 +823,14 @@ function card(a){
        a.floor ? `${a.floor}/${a.floors_total || '?'} эт.` : null].filter(Boolean).join(' · ')
     : '';
   const place = [geom, f.addr].filter(Boolean).join(' · ');
-  return `<div class="card ${f.fav?'fav':''}" data-id="${a.id}">
+  return `<div class="card ${f.fav?'fav':''} ${a.suspect?'sus':''}" data-id="${a.id}">
     <img class="thumb" loading="lazy" alt="${esc(a.title)}" src="${f.photo}" onerror="this.style.visibility='hidden'">
     <div class="body">
       <div class="title">${esc(a.title)}</div>
       <div class="pricebar">
         <span class="price">${fmt(a.price)} ${cur(a.currency)}</span>
         ${a.ppm ? `<span class="ppm">${fmt(a.ppm)} €/m²</span>` : ''}
-        ${f.change}
+        ${f.vsmed}${f.suspect}${f.change}
       </div>
       <div class="meta" title="${esc(place)}">${esc(place)}${f.seen ? ` <span class="muted">· ${f.seen}</span>` : ''}</div>
       <div class="foot">
@@ -826,7 +844,7 @@ function card(a){
 function tableHead(){
   const apt = state.profile === 'apartments';
   return `<table class="ads"><thead><tr><th></th><th>Объявление</th><th class="num">Цена</th>`
-    + (apt ? '<th class="num">€/m²</th><th class="opt">Комн.</th><th class="num opt">Площадь</th><th class="opt">Этаж</th>' : '')
+    + (apt ? '<th class="num">€/m²</th><th class="num">К медиане</th><th class="opt">Комн.</th><th class="num opt">Площадь</th><th class="opt">Этаж</th>' : '')
     + '<th>Изменение</th><th></th></tr></thead><tbody></tbody></table>';
 }
 
@@ -834,14 +852,14 @@ function row(a){
   const f = facts(a);
   const apt = state.profile === 'apartments';
   const rooms = a.rooms_n == null ? '—' : a.rooms_n === 0 ? 'студия' : a.rooms_n;
-  return `<tr class="ad ${f.fav?'fav':''}" data-id="${a.id}">
+  return `<tr class="ad ${f.fav?'fav':''} ${a.suspect?'sus':''}" data-id="${a.id}">
     <td class="ph"><img class="mini" loading="lazy" alt="${esc(a.title)}" src="${f.photo}" onerror="this.style.visibility='hidden'"></td>
     <td class="ttl"><div class="t">${esc(a.title)}</div>
       <div class="sub"><span>${esc(f.addr)}${f.seen ? ' · ' + f.seen : ''}</span>${f.tags.slice(0, 3).join('')}</div></td>
     <td class="num price">${fmt(a.price)} ${cur(a.currency)}</td>
-    ${apt ? `<td class="num muted">${a.ppm ? fmt(a.ppm) : '—'}</td><td class="nw opt">${rooms}</td>
+    ${apt ? `<td class="num muted">${a.ppm ? fmt(a.ppm) : '—'}</td><td class="num">${f.vsmed || '<span class="muted">—</span>'}</td><td class="nw opt">${rooms}</td>
     <td class="num opt">${a.area ? a.area + ' m²' : '—'}</td><td class="nw opt">${a.floor ? `${a.floor}/${a.floors_total || '?'}` : '—'}</td>` : ''}
-    <td class="chg">${f.change}</td>
+    <td class="chg">${f.suspect}${f.change}</td>
     <td class="act">${f.actions}</td>
   </tr>`;
 }
@@ -965,9 +983,11 @@ async function openAd(id){
     <div style="display:flex;gap:16px;align-items:baseline;margin-bottom:12px">
       <span class="price" style="font-size:24px">${fmt(a.price)} ${cur(a.currency)}</span>
       ${a.ppm ? `<span class="ppm">${fmt(a.ppm)} €/m²</span>` : ''}
+      ${vsMed(a)}
       ${a.prev_price ? `<span class="${a.price<a.prev_price?'down':'up'}">было ${fmt(a.prev_price)}</span>` : ''}
       ${a.old_price ? `<span class="down">на сайте указана старая цена ${fmt(a.old_price)}</span>` : ''}
     </div>
+    ${a.suspect ? `<div class="warnbox">⚠ <b>Подозрительно дёшево.</b> ${SUSPECT_HINT} Проверьте объявление, прежде чем звонить.</div>` : ''}
     <div class="gallery">${(a.photos||[]).map((u, i) =>
       `<img loading="lazy" alt="${esc(a.title)} — фото ${i + 1}" src="${esc(u)}" onclick="lbOpen(${i})">`).join('') || '<span class="muted">фото нет</span>'}</div>
     ${cadPanel(a.cadastre)}
@@ -1663,7 +1683,7 @@ function activeFilterGroups(){
     if(!el.getClientRects().length) return;
     const on = el.classList.contains('chip') ? el.dataset.v !== '' && !el.classList.contains('more')
              : el.type === 'checkbox' ? el.checked : el.value.trim() !== '';
-    if(on) groups.add(el.id === 'has_photo' ? 'photo' : head);
+    if(on) groups.add(['has_photo', 'hide_suspect'].includes(el.id) ? el.id : head);
   });
   return groups;
 }
