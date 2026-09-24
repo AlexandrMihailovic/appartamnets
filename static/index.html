@@ -87,6 +87,16 @@
   .btn{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:7px 12px;cursor:pointer}
   .btn:hover{border-color:var(--accent)}
   .btn.primary{background:var(--accent);color:var(--on-accent);border-color:var(--accent);font-weight:600}
+  .fbar{position:sticky;bottom:0;margin:12px -11px -10px;padding:8px 11px 10px;background:var(--panel);
+        border-top:1px solid var(--line);border-radius:0 0 var(--radius) var(--radius);z-index:2}
+  .fcount{font-size:12px;color:var(--dim);margin-bottom:6px;display:flex;gap:6px;flex-wrap:wrap}
+  .fcount b{color:var(--text)}
+  .fcount .dirty{color:var(--warn)}
+  #apply.dirty{box-shadow:0 0 0 2px var(--warn)}
+  aside h3.act{color:var(--accent)}
+  aside h3.act::after{content:" ●";font-size:9px;vertical-align:middle}
+  .fbadge{display:inline-block;min-width:18px;margin-left:5px;padding:0 5px;border-radius:9px;
+          background:var(--accent);color:var(--on-accent);font-size:11px;font-weight:600;text-align:center}
   section.list{flex:1;min-width:0}
   .toolbar{display:flex;gap:10px;align-items:center;margin-bottom:10px;flex-wrap:wrap}
   .count{color:var(--dim)}
@@ -390,9 +400,12 @@
     <h3>Свежесть и просмотры</h3>
     <div class="pair"><input type="number" id="age_max" placeholder="≤ дней" title="размещено не позже, дней"><input type="number" id="views_min" placeholder="≥ просм." title="просмотров не меньше"></div>
 
-    <div style="display:flex;gap:8px;margin-top:12px">
-      <button class="btn primary grow" id="apply">Применить</button>
-      <button class="btn" id="reset">Сброс</button>
+    <div class="fbar">
+      <div class="fcount" id="fcount"></div>
+      <div style="display:flex;gap:8px">
+        <button class="btn primary grow" id="apply">Применить</button>
+        <button class="btn" id="reset">Сброс</button>
+      </div>
     </div>
   </aside>
 
@@ -621,6 +634,8 @@ async function loadMeta(){
   refresh();
 }
 function refresh(){
+  appliedSig = filterSig();
+  paintFilterCount();
   if(state.tab === 'stats') loadStats();
   else if(state.tab === 'trends') loadTrends();
   else if(state.view === 'map') loadMap();
@@ -1538,6 +1553,36 @@ addEventListener('resize', () => {
   trendResizeTimer = setTimeout(loadTrends, 250);
 });
 
+function activeFilterGroups(){
+  const groups = new Set();
+  let head = null;
+  document.querySelectorAll('aside h3, aside input, aside .chip.on').forEach(el => {
+    if(el.tagName === 'H3'){ head = el; return; }
+    if(!el.getClientRects().length) return;
+    const on = el.classList.contains('chip') ? el.dataset.v !== '' && !el.classList.contains('more')
+             : el.type === 'checkbox' ? el.checked : el.value.trim() !== '';
+    if(on) groups.add(el.id === 'has_photo' ? 'photo' : head);
+  });
+  return groups;
+}
+let appliedSig = '';
+function filterSig(){
+  const q = query();
+  ['offset', 'limit', 'sort', 'dir', 'q'].forEach(k => q.delete(k));
+  return q.toString();
+}
+function paintFilterCount(){
+  const groups = activeFilterGroups();
+  document.querySelectorAll('aside h3').forEach(h => h.classList.toggle('act', groups.has(h)));
+  const n = groups.size, dirty = filterSig() !== appliedSig;
+  const word = n % 10 === 1 && n % 100 !== 11 ? 'фильтр' : [2,3,4].includes(n % 10) && ![12,13,14].includes(n % 100) ? 'фильтра' : 'фильтров';
+  $('#fcount').innerHTML = (n ? `выбрано: <b>${n} ${word}</b>` : 'фильтры не выбраны')
+    + (dirty ? '<span class="dirty">· не применено</span>' : '');
+  $('#apply').classList.toggle('dirty', dirty);
+  $('#filtersBtn').innerHTML = 'Фильтры' + (n ? `<span class="fbadge">${n}</span>` : '');
+}
+['input', 'change', 'click'].forEach(t => document.querySelector('aside').addEventListener(t, paintFilterCount));
+
 function toggleFilters(open){
   document.querySelector('aside').classList.toggle('open', open);
   $('#shade').classList.toggle('open', open);
@@ -1549,6 +1594,7 @@ $('#apply').onclick = () => { state.offset = 0; toggleFilters(false); refresh();
 $('#reset').onclick = () => {
   document.querySelectorAll('aside input').forEach(i => { i.type === 'checkbox' ? i.checked = false : i.value = ''; });
   state.rooms.clear(); state.housing.clear(); state.districts.clear(); state.author = '';
+  $('#author').querySelectorAll('.chip').forEach(c => c.classList.toggle('on', c.dataset.v === ''));
   CHIP_SETS.forEach(k => state[k].clear());
   toggleFilters(false);
   loadMeta();
