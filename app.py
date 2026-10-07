@@ -152,7 +152,8 @@ BENCH_COLS = DEALS_COLS + f""",
 
 
 FEATURE_FILTERS = {"condition": "Состояние квартиры", "building": "Тип здания",
-                   "locality": "Населённый пункт", "parking": "Тип стоянки"}
+                   "locality": "Населённый пункт", "parking": "Тип стоянки",
+                   "premise": "Тип помещения", "pcondition": "Состояние помещения"}
 AMENITIES = {
     "heating": ("Автономное отопление", "= 'True'"), "lift": ("Лифт", "= 'True'"),
     "furnished": ("Меблированная", "= 'True'"), "appliances": ("С бытовой техникой", "= 'True'"),
@@ -161,6 +162,11 @@ AMENITIES = {
     "balcony": ("Балкон / лоджия", "NOT IN ('Нет', '')"),
     "electric": ("Электричество", "= 'True'"), "pit": ("Смотровая яма", "= 'True'"),
     "guard": ("Круглосуточная охрана", "= 'True'"), "cctv": ("Видеонаблюдение", "= 'True'"),
+    "road": ("Выход на проезжую часть", "= 'True'"), "ready_c": ("Готов к въезду", "= 'True'"),
+    "parking_c": ("Парковочные места", "= 'True'"), "acs": ("Кондиционеры", "= 'True'"),
+    "gas": ("Газифицирован", "= 'True'"), "water": ("Водопровод", "= 'True'"),
+    "generator": ("Электрогенератор", "= 'True'"), "equipment": ("Вместе с оборудованием", "= 'True'"),
+    "ramp": ("Рампа для погрузки / разгрузки товара", "= 'True'"),
 }
 
 
@@ -446,7 +452,7 @@ def api_meta(conn) -> dict:
                           AND (b.med_ppm - {PPM}) * 100.0 / b.med_ppm BETWEEN 15 AND 60)""",
                 (key,)).fetchone()["c"]
         out["profiles"].append({
-            "key": key, "title": profile["title"], "count": row["c"],
+            "key": key, "title": profile["title"], "path": PROFILE_PATHS[key], "count": row["c"],
             "fresh": row["fresh"] or 0, "down": down, "recent7": recent, "baseline": base,
             "deals": deals,
         })
@@ -502,13 +508,32 @@ def api_stats(conn, params) -> dict:
            FROM price_history h JOIN ads a ON a.id = h.ad_id
            WHERE a.profile = ? GROUP BY day ORDER BY day DESC LIMIT 60""", (profile,))][::-1]
 
-    price_hist = [dict(r) for r in conn.execute(
-        """SELECT CAST(a.price / 10000 AS INT) * 10 AS bucket_k, COUNT(*) AS n
-           FROM ads a WHERE a.profile = ? AND a.gone_at IS NULL AND a.price > 0
-           GROUP BY bucket_k ORDER BY bucket_k""", (profile,))]
+    if profile == "commercial":
+        price_hist = [dict(r) for r in conn.execute(
+            f"""SELECT {PRICE_STEPS} AS label, COUNT(*) AS n
+                FROM ads a WHERE a.profile = ? AND a.gone_at IS NULL AND a.price > 0
+                GROUP BY 1 ORDER BY MIN(a.price)""", (profile,))]
+    else:
+        price_hist = [dict(r) for r in conn.execute(
+            """SELECT CAST(a.price / 10000 AS INT) * 10 AS bucket_k, COUNT(*) AS n
+               FROM ads a WHERE a.profile = ? AND a.gone_at IS NULL AND a.price > 0
+               GROUP BY bucket_k ORDER BY bucket_k""", (profile,))]
 
-    return {"by_district": by_district, "by_rooms": by_rooms, "posted": posted,
+    kind = feature("Тип помещения")
+    by_kind = [dict(r) for r in conn.execute(
+        f"""SELECT {kind} AS kind, COUNT(*) AS n, ROUND(AVG(a.price)) AS avg_price,
+                   ROUND(AVG({PPM})) AS avg_ppm, ROUND(AVG(d.area), 1) AS avg_area
+            FROM ads a JOIN ad_details d ON d.id = a.id
+            WHERE a.profile = ? AND a.gone_at IS NULL AND {kind} <> ''
+            GROUP BY 1 ORDER BY n DESC""", (profile,))]
+
+    return {"by_district": by_district, "by_rooms": by_rooms, "by_kind": by_kind, "posted": posted,
             "changes": changes, "price_hist": price_hist}
+
+
+PRICE_STEPS = ("CASE WHEN a.price < 50000 THEN 'до 50 тыс.' WHEN a.price < 100000 THEN '50–100 тыс.' "
+               "WHEN a.price < 200000 THEN '100–200 тыс.' WHEN a.price < 500000 THEN '200–500 тыс.' "
+               "WHEN a.price < 1000000 THEN '500 тыс. – 1 млн' ELSE 'от 1 млн' END")
 
 
 TREND_GROUPS = {
@@ -526,6 +551,7 @@ TREND_GROUPS = {
                "WHEN d.floors_total IS NOT NULL AND d.floor >= d.floors_total THEN 'последний этаж' "
                "ELSE 'средние этажи' END"),
     "developer": "NULLIF(d.developer, '')",
+    "kind":      "NULLIF(json_extract(d.features_json, '$.\"Тип помещения\"'), '')",
 }
 
 TREND_ORDER = {
@@ -794,7 +820,9 @@ SECTORS = {"Ботаника": "botanica", "Центр": "centru", "Чокана
            "Скулянка": "sculeanca", "Аэропорт": "aeroport", "Пригород": "suburbii"}
 SECTOR_BY_SLUG = {slug: name for name, slug in SECTORS.items()}
 SECTIONS = (("/", "Квартиры"), ("/garages", "Гаражи и парковки"),
+            ("/commercial", "Коммерческая недвижимость"),
             ("/stats", "Статистика"), ("/trends", "Динамика цен"))
+PROFILE_PATHS = {"apartments": "/", "garages": "/garages", "commercial": "/commercial"}
 
 
 def money(value) -> str:
@@ -869,9 +897,9 @@ def home_page(conn) -> dict:
     stats = api_stats(conn, {"profile": ["apartments"]})
     rooms = [r for r in stats["by_rooms"] if r["rooms"] is not None and r["n"] >= 5]
     body = f"""<h2>Цены на недвижимость в Кишинёве на {date_text()}</h2>
-  <p>В базе {money(active_count(conn, 'apartments'))} действующих объявлений о продаже квартир
-  и {money(active_count(conn, 'garages'))} объявлений о продаже гаражей и парковочных мест
-  в Кишинёве. Данные обновляются каждые полчаса, по каждому объявлению сохраняется история
+  <p>В базе {money(active_count(conn, 'apartments'))} действующих объявлений о продаже квартир,
+  {money(active_count(conn, 'garages'))} — гаражей и парковочных мест и
+  {money(active_count(conn, 'commercial'))} — коммерческой недвижимости в Кишинёве. Данные обновляются каждые полчаса, по каждому объявлению сохраняется история
   изменения цены, поэтому видно, кто из продавцов снижает цену и насколько.</p>
   <h3>Средняя цена квадратного метра по секторам Кишинёва</h3>
   <table class="data"><tr><th>Сектор</th><th>Цена за m²</th><th>Средняя цена лота</th><th>Объявлений</th></tr>
@@ -883,7 +911,7 @@ def home_page(conn) -> dict:
   фильтры по площади, этажу и жилому фонду, карта и отбор недооценённых предложений —
   во вкладках выше.</p>"""
     return {"title": "Цены на квартиры в Кишинёве — анализ рынка недвижимости",
-            "description": "Цены на квартиры, гаражи и парковки в Кишинёве: история снижения цен, "
+            "description": "Цены на квартиры, гаражи и коммерческую недвижимость в Кишинёве: история снижения цен, "
                            "статистика по секторам и динамика цены за m² по месяцам.",
             "h1": "Недвижимость Кишинёва: цены, статистика и динамика рынка",
             "init": {"profile": "apartments", "tab": "new"}, "body": body}
@@ -906,6 +934,34 @@ def garages_page(conn) -> dict:
                            "цены по секторам, новые объявления и снижения цен.",
             "h1": "Гаражи и парковочные места в Кишинёве: цены и объявления",
             "init": {"profile": "garages", "tab": "new"}, "body": body}
+
+
+def commercial_page(conn) -> dict:
+    stats = api_stats(conn, {"profile": ["commercial"]})
+    total = active_count(conn, "commercial")
+    kinds = "".join(
+        f"<tr><td>{escape(r['kind'])}</td><td>{money(r['avg_ppm'])} €</td><td>{money(r['avg_area'])} m²</td>"
+        f"<td>{money(r['avg_price'])} €</td><td>{r['n']}</td></tr>"
+        for r in stats["by_kind"] if r["n"] >= 3)
+    sectors = "".join(
+        f"<tr><td>{escape(r['district'])}</td><td>{money(r['avg_ppm'])} €</td>"
+        f"<td>{money(r['avg_price'])} €</td><td>{r['n']}</td></tr>"
+        for r in stats["by_district"] if r["avg_ppm"])
+    body = f"""<h2>Цены на коммерческую недвижимость в Кишинёве на {date_text()}</h2>
+  <p>В базе {money(total)} действующих объявлений о продаже коммерческой недвижимости в Кишинёве:
+  офисы, торговые помещения, склады, производственные помещения, кафе и рестораны, отели.
+  По каждому объявлению хранится история цены: видно, какие помещения подешевели и на сколько.</p>
+  <h3>Средняя цена квадратного метра по секторам</h3>
+  <table class="data"><tr><th>Сектор</th><th>Цена за m²</th><th>Средняя цена</th><th>Объявлений</th></tr>
+  {sectors}</table>
+  <h3>Цены по типу помещения</h3>
+  <table class="data"><tr><th>Тип</th><th>Цена за m²</th><th>Средняя площадь</th><th>Средняя цена</th><th>Объявлений</th></tr>
+  {kinds}</table>"""
+    return {"title": "Коммерческая недвижимость в Кишинёве — цены и объявления",
+            "description": f"{money(total)} объявлений о продаже коммерческой недвижимости в Кишинёве: "
+                           "офисы, торговые помещения, склады; цена за m² по секторам и снижения цен.",
+            "h1": "Коммерческая недвижимость в Кишинёве: цены и объявления",
+            "init": {"profile": "commercial", "tab": "new"}, "body": body}
 
 
 def stats_page(conn) -> dict:
@@ -975,8 +1031,8 @@ TAB_TITLES = [("deals", "Выгодные", "deals"), ("new", "Новые", "rec
 
 
 def tab_href(profile: str, tab: str) -> str:
-    if profile == "garages":
-        return f"/garages#profile=garages&tab={tab}"
+    if profile != "apartments":
+        return f"{PROFILE_PATHS[profile]}#profile={profile}&tab={tab}"
     if tab in ("stats", "trends"):
         return f"/{tab}"
     return f"/#profile=apartments&tab={tab}"
@@ -986,7 +1042,7 @@ def nav_html(profiles: list, init: dict) -> tuple[str, str]:
     badge = lambda n: f'<span class="badge">{n}</span>' if n not in (None, "") else ""
     cur = init.get("profile", "apartments")
     top = "".join(
-        f'<a href="{"/garages" if p["key"] == "garages" else "/"}" data-p="{p["key"]}" '
+        f'<a href="{PROFILE_PATHS[p["key"]]}" data-p="{p["key"]}" '
         f'class="{"on" if p["key"] == cur else ""}">{escape(p["title"])}{badge(p["count"])}</a>' for p in profiles)
     counts = next((p for p in profiles if p["key"] == cur), {})
     tabs = "".join(
@@ -1006,6 +1062,7 @@ def page_for(conn, route: str) -> dict | None:
         build = lambda: sector_page(conn, name)
     else:
         build = {"/": lambda: home_page(conn), "/garages": lambda: garages_page(conn),
+                 "/commercial": lambda: commercial_page(conn),
                  "/stats": lambda: stats_page(conn), "/trends": lambda: trends_page(conn)}.get(path)
         if not build:
             return None

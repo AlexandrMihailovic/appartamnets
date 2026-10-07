@@ -9,13 +9,19 @@ const state = {
           months: +(hash.get('months') || 24), min_n: +(hash.get('min_n') || 8),
           smooth: +(hash.get('smooth') || 3), gone: hash.get('gone') || 'both', data: null}
 };
-const CHIP_SETS = ['condition', 'building', 'locality', 'developers', 'parking', 'amen'];
+const CHIP_SETS = ['condition', 'building', 'locality', 'developers', 'parking', 'premise', 'pcondition', 'amen'];
 CHIP_SETS.forEach(k => state[k] = new Set());
 const AMEN = {
   apartments: [['heating','автономное отопление'],['lift','лифт'],['furnished','мебель'],['appliances','бытовая техника'],
                ['ready','готова к въезду'],['ac','кондиционер'],['parking','парковка'],['baths2','2+ санузла'],['balcony','балкон']],
   garages: [['electric','электричество'],['pit','смотровая яма'],['guard','круглосуточная охрана'],['cctv','видеонаблюдение']],
+  commercial: [['road','выход на проезжую часть'],['ready_c','готов к въезду'],['heating','автономное отопление'],
+               ['parking_c','парковка'],['acs','кондиционеры'],['gas','газ'],['water','водопровод'],
+               ['generator','электрогенератор'],['equipment','с оборудованием'],['ramp','рампа для разгрузки'],['cctv','видеонаблюдение']],
 };
+const HAS_AREA = p => p === 'apartments' || p === 'commercial';
+const PROFILE_PATHS = {apartments: '/', garages: '/garages', commercial: '/commercial'};
+const floorTxt = a => !a.floor ? '' : a.floors_total ? `${a.floor}/${a.floors_total}` : state.profile === 'apartments' ? `${a.floor}/?` : `${a.floor}`;
 const DEV_SHOWN = 12;
 const fmt = n => n == null ? '—' : Math.round(n).toLocaleString('ru-RU').replace(/ /g,' ');
 const esc = s => (s ?? '').toString().replace(/[<>&"]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]));
@@ -44,12 +50,12 @@ function syncHash(){
 function pagePath(){
   if(PAGE.district && state.profile === 'apartments' && state.districts.size === 1 && state.districts.has(PAGE.district))
     return location.pathname;
-  if(state.profile === 'garages') return '/garages';
+  if(state.profile !== 'apartments') return PROFILE_PATHS[state.profile];
   if(state.tab === 'stats' || state.tab === 'trends') return '/' + state.tab;
   return '/';
 }
 function tabHref(profile, tab){
-  if(profile === 'garages') return '/garages#profile=garages&tab=' + tab;
+  if(profile !== 'apartments') return PROFILE_PATHS[profile] + '#profile=' + profile + '&tab=' + tab;
   if(tab === 'stats' || tab === 'trends') return '/' + tab;
   return '/#profile=apartments&tab=' + tab;
 }
@@ -58,7 +64,7 @@ async function loadMeta(){
   state.meta = await (await fetch('/api/meta')).json();
   const m = state.meta;
   $('#profiles').innerHTML = m.profiles.map(p =>
-    `<a href="${p.key === 'garages' ? '/garages' : '/'}" data-p="${p.key}" class="${p.key===state.profile?'on':''}">${p.title}<span class="badge">${p.count}</span></a>`).join('');
+    `<a href="${p.path || PROFILE_PATHS[p.key] || '/'}" data-p="${p.key}" class="${p.key===state.profile?'on':''}">${p.title}<span class="badge">${p.count}</span></a>`).join('');
   $('#profiles').onclick = e => { const b = e.target.closest('[data-p]'); if(!b) return; e.preventDefault();
     state.profile = b.dataset.p; state.offset = 0; state.districts.clear(); state.housing.clear();
     CHIP_SETS.forEach(k => state[k].clear());
@@ -74,6 +80,7 @@ async function loadMeta(){
 
   const isApt = state.profile === 'apartments';
   document.querySelectorAll('.apt-only').forEach(el => el.style.display = isApt ? '' : 'none');
+  document.querySelectorAll('.area-only').forEach(el => el.style.display = HAS_AREA(state.profile) ? '' : 'none');
   document.querySelectorAll('.deals-only').forEach(el =>
     el.style.display = (state.tab === 'deals' && isApt) ? '' : 'none');
   const c = m.counts[state.profile] || {districts:[],housing:[],developers:[]};
@@ -92,7 +99,7 @@ async function loadMeta(){
     el.closest('.fgroup').style.display = values.length ? '' : 'none';
     el.onclick = e => toggle(e, 'v', set);
   };
-  ['condition', 'building', 'locality', 'parking'].forEach(k => chipsOf(k, c[k] || [], state[k]));
+  ['condition', 'building', 'locality', 'parking', 'premise', 'pcondition'].forEach(k => chipsOf(k, c[k] || [], state[k]));
   const amen = AMEN[state.profile] || [], amenNames = Object.fromEntries(amen);
   chipsOf('amen', amen.map(x => x[0]), state.amen, k => amenNames[k]);
   chipsOf('developers', state.profile === 'apartments' ? c.developers || [] : [], state.developers);
@@ -214,10 +221,10 @@ function facts(a){
 
 function card(a){
   const f = facts(a);
-  const geom = state.profile === 'apartments'
+  const geom = HAS_AREA(state.profile)
     ? [a.rooms_n != null ? (a.rooms_n === 0 ? 'студия' : a.rooms_n + '-комн.') : null,
        a.area ? a.area + ' m²' : null,
-       a.floor ? `${a.floor}/${a.floors_total || '?'} эт.` : null].filter(Boolean).join(' · ')
+       a.floor ? floorTxt(a) + ' эт.' : null].filter(Boolean).join(' · ')
     : '';
   const place = [geom, f.addr].filter(Boolean).join(' · ');
   return `<div class="card ${f.fav?'fav':''} ${a.suspect?'sus':''}" data-id="${a.id}">
@@ -241,7 +248,8 @@ function card(a){
 function tableHead(){
   const apt = state.profile === 'apartments';
   return `<table class="ads"><thead><tr><th></th><th>Объявление</th><th class="num">Цена</th>`
-    + (apt ? '<th class="num">€/m²</th><th class="num">К медиане</th><th class="opt">Комн.</th><th class="num opt">Площадь</th><th class="opt">Этаж</th>' : '')
+    + (apt ? '<th class="num">€/m²</th><th class="num">К медиане</th><th class="opt">Комн.</th><th class="num opt">Площадь</th><th class="opt">Этаж</th>'
+       : HAS_AREA(state.profile) ? '<th class="num">€/m²</th><th class="num opt">Площадь</th><th class="opt">Этаж</th>' : '')
     + '<th>Изменение</th><th></th></tr></thead><tbody></tbody></table>';
 }
 
@@ -255,7 +263,9 @@ function row(a){
       <div class="sub"><span>${esc(f.addr)}${f.seen ? ' · ' + f.seen : ''}</span>${f.tags.slice(0, 3).join('')}</div></td>
     <td class="num price">${fmt(a.price)} ${cur(a.currency)}</td>
     ${apt ? `<td class="num muted">${a.ppm ? fmt(a.ppm) : '—'}</td><td class="num">${f.vsmed || '<span class="muted">—</span>'}</td><td class="nw opt">${rooms}</td>
-    <td class="num opt">${a.area ? a.area + ' m²' : '—'}</td><td class="nw opt">${a.floor ? `${a.floor}/${a.floors_total || '?'}` : '—'}</td>` : ''}
+    <td class="num opt">${a.area ? a.area + ' m²' : '—'}</td><td class="nw opt">${floorTxt(a) || '—'}</td>`
+    : HAS_AREA(state.profile) ? `<td class="num muted">${a.ppm ? fmt(a.ppm) : '—'}</td>
+    <td class="num opt">${a.area ? a.area + ' m²' : '—'}</td><td class="nw opt">${floorTxt(a) || '—'}</td>` : ''}
     <td class="chg">${f.suspect}${f.change}</td>
     <td class="act">${f.actions}</td>
   </tr>`;
@@ -598,7 +608,7 @@ function popupHtml(arr){
   const rows = arr.slice(0, 25).map(p => {
     const geom = [p.rooms_n != null ? (p.rooms_n === 0 ? 'студия' : p.rooms_n + '-комн.') : null,
                   p.area ? p.area + ' m²' : null,
-                  p.floor ? `${p.floor}/${p.floors_total || '?'} эт.` : null].filter(Boolean).join(' · ');
+                  p.floor ? floorTxt(p) + ' эт.' : null].filter(Boolean).join(' · ');
     const extra = [p.discount != null ? `выгода −${p.discount.toFixed(0)}%` : null,
                    p.drop_pct != null && p.drop_pct < 0 ? `подешевело на ${Math.abs(p.drop_pct).toFixed(1)}%` : null,
                    p.housing_stock || null,
@@ -750,15 +760,21 @@ async function loadStats(){
       ${s.by_rooms.map(r => `<tr><td>${r.rooms === 0 ? 'студия' : r.rooms}</td><td>${fmt(r.n)}</td>
         <td>${fmt(r.avg_area)} m²</td><td>${fmt(r.avg_price)}</td><td>${fmt(r.avg_ppm)}</td></tr>`).join('')}
       </table></div></div>` : '';
+  const kindPanel = s.by_kind.length ? `
+    <div class="panel" style="margin-top:14px"><h4>По типу помещения</h4>
+      <div class="scroll-x"><table class="data"><tr><th>Тип</th><th>Лотов</th><th>Ср. площадь</th><th>Ср. цена</th><th>Ср. €/m²</th></tr>
+      ${s.by_kind.map(r => `<tr><td>${esc(r.kind)}</td><td>${fmt(r.n)}</td>
+        <td>${fmt(r.avg_area)} m²</td><td>${fmt(r.avg_price)}</td><td>${fmt(r.avg_ppm)}</td></tr>`).join('')}
+      </table></div></div>` : '';
   $('#statsView').innerHTML = `
     <div class="grid2">
       <div class="panel">${pricePanel}</div>
       <div class="panel"><h4>Объявлений по секторам</h4>
         ${bars([...s.by_district].sort((a,b)=>b.n-a.n), 'district', 'n', 'шт.')}</div>
     </div>
-    ${roomsPanel}
+    ${roomsPanel}${kindPanel}
     <div class="panel" style="margin-top:14px"><h4>Распределение по цене</h4>
-      ${bars(s.price_hist.map(b => ({label: `${b.bucket_k}–${b.bucket_k+10} тыс.`, n: b.n})), 'label', 'n', 'шт.')}</div>
+      ${bars(s.price_hist.map(b => ({label: b.label || `${b.bucket_k}–${b.bucket_k+10} тыс.`, n: b.n})), 'label', 'n', 'шт.')}</div>
     <div class="panel" style="margin-top:14px"><h4>Когда размещены (по месяцам)</h4>
       ${bars(s.posted, 'month', 'n', 'шт.')}</div>
     <div class="panel" style="margin-top:14px"><h4>Изменения цены по дням</h4>
@@ -780,7 +796,12 @@ const TREND_METRICS = {
 };
 const TREND_GROUPS_UI = [['none','без группировки'],['rooms','по комнатам'],['district','по секторам'],
   ['housing','по жилому фонду'],['author','по автору'],['area','по площади'],['floor','по этажу'],
-  ['developer','по застройщику']];
+  ['developer','по застройщику'],['kind','по типу помещения']];
+const TREND_GROUPS_OF = {
+  apartments: ['none','rooms','district','housing','author','area','floor','developer'],
+  garages: ['none','district','author'],
+  commercial: ['none','kind','district','author','area'],
+};
 
 const mlabel = m => MONTH_RU[+m.slice(5,7) - 1] + ' ' + m.slice(2,4);
 const dec = (v, d) => v == null ? '—' : v.toLocaleString('ru-RU', {minimumFractionDigits: d, maximumFractionDigits: d});
@@ -1003,7 +1024,7 @@ function trendControls(){
   return `<div class="ctlbar">
     <div class="ctl"><label for="t_metric">показатель</label><select id="t_metric">
       ${opt(Object.entries(TREND_METRICS).map(([k, m]) => [k, m.t]), t.metric)}</select></div>
-    <div class="ctl"><label for="t_group">разрез</label><select id="t_group">${opt(TREND_GROUPS_UI, t.group)}</select></div>
+    <div class="ctl"><label for="t_group">разрез</label><select id="t_group">${opt(TREND_GROUPS_UI.filter(g => (TREND_GROUPS_OF[state.profile] || ['none']).includes(g[0])), t.group)}</select></div>
     <div class="ctl"><label for="t_months">период</label><select id="t_months">
       ${opt([[12,'12 месяцев'],[24,'24 месяца'],[36,'3 года'],[60,'5 лет'],[120,'всё, что есть']], t.months)}</select></div>
     <div class="ctl"><label for="t_smooth">сглаживание</label><select id="t_smooth">
@@ -1015,6 +1036,7 @@ function trendControls(){
 }
 
 async function loadTrends(){
+  if(!(TREND_GROUPS_OF[state.profile] || ['none']).includes(state.trend.group)) state.trend.group = 'none';
   syncHash();
   const view = $('#trendsView');
   view.innerHTML = trendControls() + '<div class="empty">считаю…</div>';

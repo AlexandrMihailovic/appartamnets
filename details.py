@@ -134,7 +134,7 @@ def pick(conn, args) -> list[str]:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Сбор карточек объявлений в базу")
-    parser.add_argument("--profile", default=None, help="apartments | garages")
+    parser.add_argument("--profile", default=None, help="apartments | garages | commercial")
     parser.add_argument("--all", action="store_true", help="перечитать вообще все карточки")
     parser.add_argument("--changed", action="store_true", help="только те, где поменялась цена")
     parser.add_argument("--stale", type=int, default=None, help="обновить карточки старше N дней")

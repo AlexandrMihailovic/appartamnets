@@ -15,4 +15,10 @@ PROFILES = {
         "url": f"{BASE}&spec=1408",
         "limit": 800,
     },
+    "commercial": {
+        "title": "Коммерческая",
+        "subcategory_id": 1405,
+        "url": f"{BASE}&spec=1405",
+        "limit": 800,
+    },
 }

@@ -7,7 +7,7 @@
 <title>{{TITLE}}</title>
 <link rel="icon" href="/favicon.ico" sizes="any">
 <meta name="description" content="{{DESCRIPTION}}">
-<meta name="keywords" content="недвижимость Кишинёв, квартиры Кишинёв, купить квартиру в Кишинёве, цены на недвижимость Молдова, аналитика рынка недвижимости, цена за квадратный метр, вторичка и новострой, гаражи и парковки Кишинёв, статистика цен на жильё">
+<meta name="keywords" content="недвижимость Кишинёв, квартиры Кишинёв, купить квартиру в Кишинёве, цены на недвижимость Молдова, аналитика рынка недвижимости, цена за квадратный метр, вторичка и новострой, гаражи и парковки Кишинёв, коммерческая недвижимость Кишинёв, офисы и торговые помещения, статистика цен на жильё">
 <meta name="robots" content="index, follow">
 <link rel="canonical" href="{{ORIGIN}}{{PATH}}">
 <link rel="alternate" hreflang="ru" href="{{ORIGIN}}{{PATH}}">
@@ -28,7 +28,7 @@
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"WebSite","name":"Недвижимость — анализ рынка Кишинёва",
  "url":"{{ORIGIN}}/","inLanguage":"ru",
- "description":"Цены на квартиры, гаражи и парковки в Кишинёве, история изменения цен, статистика по секторам и помесячная динамика стоимости квадратного метра."}
+ "description":"Цены на квартиры, гаражи, парковки и коммерческую недвижимость в Кишинёве, история изменения цен, статистика по секторам и помесячная динамика стоимости квадратного метра."}
 </script>
 <script>try { const t = localStorage.getItem('theme'); if(t === 'light' || t === 'dark') document.documentElement.dataset.theme = t; } catch(e){}</script>
 <script src="/app.js?v={{ASSET_V}}" defer></script>
@@ -381,13 +381,18 @@
     <h3>Цена за m²</h3>
     <div class="pair"><input type="number" id="ppm_min" placeholder="от"><input type="number" id="ppm_max" placeholder="до"></div>
 
+    <div class="fgroup"><h3>Тип помещения</h3><div class="chips" id="premise"></div></div>
     <div class="apt-only">
       <h3>Комнат</h3>
       <div class="chips" id="rooms"></div>
+    </div>
+    <div class="area-only">
       <h3>Площадь, m²</h3>
       <div class="pair"><input type="number" id="area_min" placeholder="от"><input type="number" id="area_max" placeholder="до"></div>
       <h3>Этаж</h3>
       <div class="pair"><input type="number" id="floor_min" placeholder="от"><input type="number" id="floor_max" placeholder="до"></div>
+    </div>
+    <div class="apt-only">
       <div class="pair"><label class="check"><input type="checkbox" id="not_first"> не первый</label>
       <label class="check"><input type="checkbox" id="not_last"> не последний</label></div>
       <h3>Этажей в доме</h3>
@@ -396,6 +401,7 @@
       <div class="chips" id="housing"></div>
     </div>
     <div class="fgroup"><h3>Состояние</h3><div class="chips" id="condition"></div></div>
+    <div class="fgroup"><h3>Состояние</h3><div class="chips" id="pcondition"></div></div>
     <div class="fgroup"><h3>Тип здания</h3><div class="chips" id="building"></div></div>
     <div class="fgroup"><h3>Застройщик</h3><div class="chips" id="developers"></div></div>
     <div class="fgroup"><h3>Тип стоянки</h3><div class="chips" id="parking"></div></div>
